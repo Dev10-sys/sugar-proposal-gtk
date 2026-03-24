@@ -78,26 +78,26 @@ The main components involved in this work are the Frame, Journal, Clipboard, Con
 **Diagram 1 — Sugar System Architecture (High Level)**
 ```mermaid
 flowchart TD
-    User([User Interactive Session]) -->|Interacts with| Shell[Sugar Shell UI Environment]
+    User([User Interactive Session]) -->|Interacts with| Shell["Sugar Shell UI Environment"]
     
-    subgraph Core Components
-        Shell --> Frame[Frame Module]
-        Shell --> Journal[Journal Subsystem]
-        Shell --> Clipboard[Clipboard Manager]
-        Shell --> CP[Control Panel]
-        Shell --> Launcher[Activity Launcher]
+    subgraph CoreComponents ["Core Components"]
+        Shell --> Frame["Frame Module"]
+        Shell --> Journal["Journal Subsystem"]
+        Shell --> Clipboard["Clipboard Manager"]
+        Shell --> CP["Control Panel"]
+        Shell --> Launcher["Activity Launcher"]
     end
 
-    Core Components -->|PyGObject Bindings| Toolkit[Sugar Toolkit \n GTK / PyGObject]
-    Toolkit --> GTK[GTK Framework \n GTK3 → GTK4]
+    CoreComponents -->|PyGObject Bindings| Toolkit["Sugar Toolkit<br/>GTK / PyGObject"]
+    Toolkit --> GTK["GTK Framework<br/>GTK3 → GTK4"]
     
-    GTK --> Display[Display Server Protocol \n Wayland / X11]
+    GTK --> Display["Display Server Protocol<br/>Wayland / X11"]
     
-    subgraph Linux System Services
-        Display --> DBus[(DBus Message Bus)]
-        Display --> GSettings[(GSettings / Gio)]
-        Display --> NM[(NetworkManager)]
-        Display --> Datastore[(Sugar Datastore)]
+    subgraph LinuxSystemServices ["Linux System Services"]
+        Display --> DBus[("DBus Message Bus")]
+        Display --> GSettings[("GSettings / Gio")]
+        Display --> NM[("NetworkManager")]
+        Display --> Datastore[("Sugar Datastore")]
     end
 ```
 
@@ -106,23 +106,23 @@ flowchart TD
 **Diagram 2 — Activity Runtime Architecture**
 ```mermaid
 flowchart TD
-    User([User Interactive Session]) -->|Input/Event| Shell[Sugar Shell Process]
+    User([User Interactive Session]) -->|Input/Event| Shell["Sugar Shell Process"]
     
-    subgraph Shell Runtime Services
-        Shell --> AM[Activity Manager Daemon]
-        Shell --> JS[Journal Service \n Save/Load State]
-        Shell --> DS[Datastore Interface]
-        Shell --> CB[Global Clipboard]
-        Shell --> NW[Network & IPC]
+    subgraph ShellRuntimeServices ["Shell Runtime Services"]
+        Shell --> AM["Activity Manager Daemon"]
+        Shell --> JS["Journal Service<br/>Save/Load State"]
+        Shell --> DS["Datastore Interface"]
+        Shell --> CB["Global Clipboard"]
+        Shell --> NW["Network & IPC"]
     end
     
-    AM -->|Launch Request via DBus| ActivityApp[Activity Instance \n Write, Browse, Terminal, etc.]
+    AM -->|Launch Request via DBus| ActivityApp["Activity Instance<br/>Write, Browse, Terminal, etc."]
     JS -.->|State restore/persist| ActivityApp
     DS -.->|File indexing| ActivityApp
     
-    ActivityApp --> Toolkit[Sugar Toolkit API]
-    Toolkit --> GTK[GTK Runtime Environment]
-    GTK --> Protocol[Display Protocol \n X11/Wayland]
+    ActivityApp --> Toolkit["Sugar Toolkit API"]
+    Toolkit --> GTK["GTK Runtime Environment"]
+    GTK --> Protocol["Display Protocol<br/>X11/Wayland"]
 ```
 
 ### GTK3 to GTK4 Migration Architecture
@@ -130,46 +130,46 @@ flowchart TD
 **Diagram 3 — Migration Architecture**
 ```mermaid
 flowchart LR
-    subgraph Legacy Architecture (Current)
+    subgraph LegacyArchitecture ["Legacy Architecture (Current)"]
         direction TB
-        L1[Sugar Shell \n Python] --> L2[PyGObject Binding]
-        L2 --> L3[GTK3 Toolkit]
-        L3 --> L4[Deprecated APIs \n VBox, HBox, Alignment]
-        L4 --> L5[(X11 Display Server)]
+        L1["Sugar Shell<br/>Python"] --> L2["PyGObject Binding"]
+        L2 --> L3["GTK3 Toolkit"]
+        L3 --> L4["Deprecated APIs<br/>VBox, HBox, Alignment"]
+        L4 --> L5[("X11 Display Server")]
     end
 
-    subgraph Target Architecture (Proposed)
+    subgraph TargetArchitecture ["Target Architecture (Proposed)"]
         direction TB
-        T1[Sugar Shell \n Python] --> T2[PyGObject Binding]
-        T2 --> T3[GTK4 Toolkit]
-        T3 --> T4[Modern APIs \n Box, Event Controllers]
-        T3 --> T5[CSS Provider Styling]
-        T3 --> T6[Native Display Handling]
-        T4 --> T7[(Wayland Compositor / X11 fallback)]
+        T1["Sugar Shell<br/>Python"] --> T2["PyGObject Binding"]
+        T2 --> T3["GTK4 Toolkit"]
+        T3 --> T4["Modern APIs<br/>Box, Event Controllers"]
+        T3 --> T5["CSS Provider Styling"]
+        T3 --> T6["Native Display Handling"]
+        T4 --> T7[("Wayland Compositor / X11 fallback")]
         T5 --> T7
         T6 --> T7
     end
     
-    Legacy Architecture ===>|Migration Path| Target Architecture
+    LegacyArchitecture ===>|Migration Path| TargetArchitecture
 ```
 
 **Diagram 4 — Internal Sugar Shell Components**
 ```mermaid
 flowchart TD
-    subgraph Sugar Desktop Shell Processes
+    subgraph SugarDesktopShellProcesses ["Sugar Desktop Shell Processes"]
         direction TB
-        Main[Main Process \n main.py]
+        Main["Main Process<br/>main.py"]
         
-        Main --> Frame[Frame UI \n Screen Edges & Trays]
-        Main --> Journal[Journal \n Activity History & Files]
-        Main --> Home[Home View \n Activity Ring/List]
+        Main --> Frame["Frame UI<br/>Screen Edges & Trays"]
+        Main --> Journal["Journal<br/>Activity History & Files"]
+        Main --> Home["Home View<br/>Activity Ring/List"]
         
-        Frame --> Clipboard[Clipboard Tray \n Cross-activity Paste]
-        Frame --> Devices[Device Tray \n Battery, Network, Volume]
+        Frame --> Clipboard["Clipboard Tray<br/>Cross-activity Paste"]
+        Frame --> Devices["Device Tray<br/>Battery, Network, Volume"]
         
-        Home --> Launcher[Activity Launcher \n DBus Execution Request]
+        Home --> Launcher["Activity Launcher<br/>DBus Execution Request"]
         
-        System[Control Panel \n System Configuration] -.-> Main
+        System["Control Panel<br/>System Configuration"] -.-> Main
     end
 ```
 
