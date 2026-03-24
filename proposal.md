@@ -65,177 +65,198 @@ Through these contributions, I have worked on different layers of the Sugar desk
 
 In this project I am working on migrating the Sugar Shell from GTK3 to GTK4 and improving its compatibility with Wayland based Linux systems.
 
-The Sugar desktop environment is currently built on GTK3. Many GTK3 APIs are now deprecated and modern Linux distributions are moving towards GTK4 and Wayland. Because of this some parts of the Sugar Shell can crash or behave incorrectly on modern systems.
+From what I have studied while working on the Sugar desktop, the Sugar Shell is the core environment that manages the user interface, activity launching, Journal, and system integration. Right now most of the Sugar Shell is still based on GTK3 and some parts assume X11 behavior.
 
-The goal of this project is to migrate the Sugar Shell to GTK4 without changing the behavior of the system. The user interface and workflow will remain the same but the internal implementation will be updated to GTK4 APIs and Wayland safe display handling.
+I think the main problem here is not just deprecated APIs, but platform change. The Linux desktop ecosystem is moving towards GTK4 and Wayland, and if Sugar stays on GTK3 and X11, it will become harder to run and maintain Sugar on modern systems.
 
-This work includes updating deprecated GTK3 widgets, container APIs, layout handling, display and monitor handling, styling, and input handling so that the Sugar Shell works correctly on both X11 and Wayland.
+So the goal of this project is not to redesign Sugar, but to keep the behavior the same and update the internal implementation so that Sugar Shell runs on GTK4 and works correctly on Wayland.
 
-The main components involved in this work are the Frame, Journal, Clipboard, Control Panel, Activity Launcher, and other core shell components because these are central parts of the Sugar desktop.
+The main parts I will be working on are the Frame, Journal, Clipboard, Control Panel, and Activity launching system, because these components form the core of the Sugar desktop environment.
 
 ### System Architecture Overview
 
-**Diagram 1 — Sugar System Architecture (High Level)**
+Before explaining the migration work, I want to explain how the Sugar system is structured, because the migration work depends on how different parts of the system interact with each other.
+
+#### Sugar System Architecture
+
 ```mermaid
 flowchart TD
-    User([User Interactive Session]) -->|Interacts with| Shell["Sugar Shell UI Environment"]
-    
-    subgraph CoreComponents ["Core Components"]
-        Shell --> Frame["Frame Module"]
-        Shell --> Journal["Journal Subsystem"]
-        Shell --> Clipboard["Clipboard Manager"]
-        Shell --> CP["Control Panel"]
-        Shell --> Launcher["Activity Launcher"]
+    classDef userLayer fill:#f8f9fa,stroke:#ced4da,stroke-width:2px;
+    classDef shellLayer fill:#e2e3e5,stroke:#6c757d,stroke-width:2px;
+    classDef runtimeLayer fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px;
+    classDef osLayer fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
+
+    User([User Interactions]) ::: userLayer --> SS
+
+    subgraph ShellLayer ["Sugar Shell Core (Python)"]
+        SS[Sugar Shell Runtime] ::: shellLayer
+        SS --> F[Frame UI]
+        SS --> J[Journal Core]
+        SS --> CP[Control Panel]
     end
 
-    CoreComponents -->|PyGObject Bindings| Toolkit["Sugar Toolkit<br/>GTK / PyGObject"]
-    Toolkit --> GTK["GTK Framework<br/>GTK3 → GTK4"]
-    
-    GTK --> Display["Display Server Protocol<br/>Wayland / X11"]
-    
-    subgraph LinuxSystemServices ["Linux System Services"]
-        Display --> DBus[("DBus Message Bus")]
-        Display --> GSettings[("GSettings / Gio")]
-        Display --> NM[("NetworkManager")]
-        Display --> Datastore[("Sugar Datastore")]
+    subgraph ToolkitIntegration ["UI & Binding Layer"]
+        SS --> PyG[PyGObject Bindings] ::: runtimeLayer
+        PyG --> GTK[GTK Framework] ::: runtimeLayer
+    end
+
+    subgraph OSLayer ["Linux System Environment"]
+        GTK --> Disp["Display Server<br/>Wayland / X11"] ::: osLayer
+        SS --> DBus[DBus Message Bus] ::: osLayer
+        DBus <--> Data[Sugar Datastore] ::: osLayer
+        DBus <--> NM[NetworkManager] ::: osLayer
+        DBus <--> GS[GSettings] ::: osLayer
     end
 ```
 
-### How Activities Depend on Sugar Shell
+**Diagram Flow (Mermaid):**
+The Sugar Shell is written mostly in Python and uses PyGObject to interact with GTK. GTK then interacts with the display server which can be X11 or Wayland. The Sugar Shell also communicates with system services like DBus, GSettings, NetworkManager, and the Sugar Datastore.
+This means the Sugar Shell sits between the user and the Linux system and acts as the main environment where everything runs.
 
-**Diagram 2 — Activity Runtime Architecture**
+### How Activities Depend on the Sugar Shell
+
+This is important because the GTK4 migration of the Shell also affects activities.
+
 ```mermaid
-flowchart TD
-    User([User Interactive Session]) -->|Input/Event| Shell["Sugar Shell Process"]
-    
-    subgraph ShellRuntimeServices ["Shell Runtime Services"]
-        Shell --> AM["Activity Manager Daemon"]
-        Shell --> JS["Journal Service<br/>Save/Load State"]
-        Shell --> DS["Datastore Interface"]
-        Shell --> CB["Global Clipboard"]
-        Shell --> NW["Network & IPC"]
+flowchart LR
+    classDef shell fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    classDef activity fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
+    classDef sys fill:#cce5ff,stroke:#007bff,stroke-width:1px;
+
+    subgraph CoreEnvironment ["Core Environment"]
+        SS[Sugar Shell] ::: shell -->|Manages Lifecycle| AM[Activity Manager]
+    end
+
+    AM -->|Launch Request| Act["Isolated Activity Instance<br/>e.g. Write, Browse"] ::: activity
+
+    subgraph ShellProvidedServices ["Shell Provided Services"]
+        Act -.->|State Persistence| Jour[Journal Integration] ::: sys
+        Act -.->|File I/O| DS[Datastore Access] ::: sys
+        Act -.->|Data Transfer| Clip[Clipboard Service] ::: sys
+        Act -.->|Connection| Net[Network State] ::: sys
     end
     
-    AM -->|Launch Request via DBus| ActivityApp["Activity Instance<br/>Write, Browse, Terminal, etc."]
-    JS -.->|State restore/persist| ActivityApp
-    DS -.->|File indexing| ActivityApp
-    
-    ActivityApp --> Toolkit["Sugar Toolkit API"]
-    Toolkit --> GTK["GTK Runtime Environment"]
-    GTK --> Protocol["Display Protocol<br/>X11/Wayland"]
+    Jour -.-> SS
+    DS -.-> SS
 ```
+
+**Diagram Flow:**
+From this architecture, I understand that activities do not run independently. They depend on the Sugar Shell for launching, saving data, accessing the Journal, clipboard, and network services.
+Because of this, I think that migrating the Sugar Shell to GTK4 is a base step. Once the Shell is stable on GTK4, activities can run on top of a GTK4 environment and activity migration becomes easier and more stable.
 
 ### GTK3 to GTK4 Migration Architecture
 
-**Diagram 3 — Migration Architecture**
+Now the migration itself is not just replacing widgets. It is a transition from an older GTK3 and X11 based architecture to a GTK4 and Wayland compatible architecture.
+
 ```mermaid
-flowchart LR
-    subgraph LegacyArchitecture ["Legacy Architecture (Current)"]
-        direction TB
-        L1["Sugar Shell<br/>Python"] --> L2["PyGObject Binding"]
-        L2 --> L3["GTK3 Toolkit"]
-        L3 --> L4["Deprecated APIs<br/>VBox, HBox, Alignment"]
-        L4 --> L5[("X11 Display Server")]
+block-beta
+    columns 3
+    
+    %% Current Architecture
+    block:Legacy:1
+        Title1["Legacy Architecture"]
+        GTK3["GTK3 Framework"]
+        X11["X11 Display Server"]
+        DepAPI["Deprecated Container/Layout APIs"]
     end
 
-    subgraph TargetArchitecture ["Target Architecture (Proposed)"]
-        direction TB
-        T1["Sugar Shell<br/>Python"] --> T2["PyGObject Binding"]
-        T2 --> T3["GTK4 Toolkit"]
-        T3 --> T4["Modern APIs<br/>Box, Event Controllers"]
-        T3 --> T5["CSS Provider Styling"]
-        T3 --> T6["Native Display Handling"]
-        T4 --> T7[("Wayland Compositor / X11 fallback")]
-        T5 --> T7
-        T6 --> T7
+    space:1
+    
+    %% Target Architecture
+    block:Modern:1
+        Title2["Modern Architecture"]
+        GTK4["GTK4 Framework"]
+        Wayland["Wayland Compositor"]
+        ModAPI["Modern Controllers & CSS Providers"]
     end
     
-    LegacyArchitecture ===>|Migration Path| TargetArchitecture
+    Legacy --> Modern
 ```
 
-**Diagram 4 — Internal Sugar Shell Components**
+**Diagram Flow:**
+In GTK3 many APIs like old container widgets, screen based display handling, and some styling methods are deprecated. GTK4 uses new container APIs, event controllers, CSS based styling, and different display handling methods which are more compatible with Wayland.
+So this migration involves updating container APIs, layout handling, display handling, styling, and input handling so that the Sugar Shell works correctly on GTK4.
+
+### Internal Sugar Shell Components
+
+To make the migration structured, I will work component by component inside the Sugar Shell.
+
 ```mermaid
 flowchart TD
-    subgraph SugarDesktopShellProcesses ["Sugar Desktop Shell Processes"]
-        direction TB
-        Main["Main Process<br/>main.py"]
-        
-        Main --> Frame["Frame UI<br/>Screen Edges & Trays"]
-        Main --> Journal["Journal<br/>Activity History & Files"]
-        Main --> Home["Home View<br/>Activity Ring/List"]
-        
-        Frame --> Clipboard["Clipboard Tray<br/>Cross-activity Paste"]
-        Frame --> Devices["Device Tray<br/>Battery, Network, Volume"]
-        
-        Home --> Launcher["Activity Launcher<br/>DBus Execution Request"]
-        
-        System["Control Panel<br/>System Configuration"] -.-> Main
-    end
-```
+    classDef main fill:#343a40,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef comp fill:#e9ecef,stroke:#6c757d,stroke-width:1px;
 
-**Diagram 5 — DBus Communication Architecture**
+    MainLoop[Sugar Shell Main Event Loop] ::: main
+
+    MainLoop --> F[Frame Overlay System] ::: comp
+    MainLoop --> J[Journal UI & Model] ::: comp
+    MainLoop --> AL[Activity Launcher System] ::: comp
+    MainLoop --> CP[Control Panel Modules] ::: comp
+    MainLoop --> C[Clipboard Management] ::: comp
+
+    %% Showing dependencies
+    F -.-> AL
+    J -.-> F
+```
+This helps in planning the migration because each of these components uses GTK widgets and display handling in different ways.
+
+### DBus Communication Architecture
+
+Sugar components communicate using DBus, especially for launching activities and accessing the datastore.
+
 ```mermaid
 sequenceDiagram
-    participant Shell as Sugar Shell
-    participant DBus as Session DBus
-    participant Activity as Activity Application
-    participant Datastore as Datastore Service
+    autonumber
+    actor User
+    participant SS as Sugar Shell
+    participant DB as DBus System/Session Bus
+    participant AM as Activity Manager
+    participant Act as Activity Runtime
+    participant DS as Datastore
 
-    Shell->>DBus: Request Launch Activity (org.laptop.Activity)
-    DBus->>Activity: Spawn Process / Init
-    Activity-->>DBus: Activity Ready Signal
-    DBus-->>Shell: Acknowledge Launch
-    
-    Activity->>DBus: Request Object Read (org.laptop.sugar.DataStore)
-    DBus->>Datastore: Fetch Metadata
-    Datastore-->>DBus: Return Dictionary (File Path, MimeType)
-    DBus-->>Activity: Provide File Handle
-    
-    Shell->>DBus: Emit Stop Signal
-    DBus->>Activity: Trigger Graceful Shutdown
-    Activity->>DBus: Write state to Datastore
-    DBus->>Datastore: Persist Object
+    User->>SS: Initiates Activity Launch
+    SS->>DB: Send Launch Request (org.laptop.Activity)
+    DB->>AM: Forward Request & Parameters
+    AM->>Act: Initialize GTK Runtime Environment
+    Act->>DB: Request Service Connections
+    Act->>DB: Read/Write Application State
+    DB->>DS: Execute Datastore I/O Operations
+    DS-->>DB: State Acknowledgment
+    DB-->>Act: Data Ready
+    Act-->>SS: Window Mapped & UI Rendered
 ```
 
-### What Work Will Be Done (Technical Tasks)
+**Diagram Flow:**
+This is important because GTK4 migration should not break DBus communication or activity lifecycle.
+
+### What Work Will Be Done
 
 I will divide the work into several technical parts.
 
 **1. GTK4 API Migration**
-
-Replace deprecated GTK3 APIs with GTK4 equivalents. This includes container APIs, layout APIs, widget APIs, and dialog APIs.
-
-Examples include replacing old container methods with GTK4 container methods, replacing deprecated layout widgets, and updating widget initialization and child management.
+I will replace deprecated GTK3 APIs with GTK4 equivalents. This includes container APIs, layout APIs, widget APIs, and dialog APIs. This work will be done component by component in the Sugar Shell.
 
 **2. Display and Monitor Handling**
-
-GTK4 uses different display and monitor handling compared to GTK3. Old APIs like screen based geometry and display access must be replaced with GTK4 display and monitor APIs. This is important for Wayland compatibility.
+GTK4 uses a different display and monitor system compared to GTK3. Old screen based APIs need to be replaced with GTK4 display and monitor APIs. This is important for Wayland compatibility.
 
 **3. Styling Migration**
-
-Old styling methods such as modify_bg and modify_fg are deprecated. These will be replaced with GTK CSS based styling using CSS providers.
+Old styling methods are deprecated in GTK4, so styling will be migrated to GTK CSS using CSS providers.
 
 **4. Wayland Compatibility**
-
-Some parts of Sugar assume X11 behavior. These parts need to be updated so that Sugar works correctly under Wayland where some X11 features are not available.
+Some parts of Sugar assume X11 behavior. These parts need to be updated so that Sugar works correctly under Wayland where some X11 specific features are not available.
 
 **5. Testing and Stability**
-
-After migration, the system must be tested to make sure that the Frame, Journal, Clipboard, Control Panel, and Activity launching system work correctly.
+After migration, I will test the Frame, Journal, Clipboard, Control Panel, and Activity launching system to make sure the system works correctly and does not crash.
 
 ### How Will It Impact Sugar Labs
 
-The Sugar Shell is the main environment where all activities run. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services. Because of this, activities depend on the Sugar Shell runtime environment.
+The Sugar Shell is the main environment where all activities run. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services.
+Because of this, I think that migrating the Sugar Shell to GTK4 is a base platform step. Once the Shell runs on GTK4 and Wayland, activities can be migrated and tested on a stable GTK4 environment.
 
-If the Sugar Shell is migrated to GTK4 and works correctly on Wayland, then activities can run on top of a GTK4 based environment. This makes activity migration easier because the base platform is already migrated.
+Right now many Linux distributions have already moved to Wayland and GTK4, but Sugar is still mostly based on GTK3 and X11. If Sugar is not migrated, it may face compatibility and maintenance problems in the future.
+So I see this project not just as a UI migration, but as a platform transition that helps Sugar run on modern Linux systems and makes future development easier.
 
-Currently many Linux distributions have moved to Wayland and GTK4, but Sugar is still mostly based on GTK3 and X11. If Sugar is not migrated, it may face compatibility problems on modern Linux systems.
-
-This project will move Sugar from GTK3 and X11 based architecture to GTK4 and Wayland compatible architecture. This will improve system stability, compatibility, and long term maintainability.
-
-This is not only a code migration task but a platform transition for Sugar to run on modern Linux systems.
-
-### Technologies Used
+### Technologies I Will Be Using
 
 | Component | Technology |
 | :--- | :--- |
@@ -249,3 +270,5 @@ This is not only a code migration task but a platform transition for Sugar to ru
 | **Build System** | Autotools |
 | **Styling** | GTK CSS |
 | **Networking** | NetworkManager |
+
+Most of the Sugar Shell code is written in Python and uses PyGObject to interact with GTK, so most of the migration work will involve updating GTK APIs and display handling in Python code.
