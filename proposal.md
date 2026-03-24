@@ -81,10 +81,10 @@ Before explaining the migration work, I want to explain how the Sugar system is 
 
 ```mermaid
 flowchart TD
-    classDef userLayer fill:#f8f9fa,stroke:#ced4da,stroke-width:2px;
-    classDef shellLayer fill:#e2e3e5,stroke:#6c757d,stroke-width:2px;
-    classDef runtimeLayer fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px;
-    classDef osLayer fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
+    classDef userLayer fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000;
+    classDef shellLayer fill:#e2e3e5,stroke:#6c757d,stroke-width:2px,color:#000;
+    classDef runtimeLayer fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px,color:#000;
+    classDef osLayer fill:#fff3cd,stroke:#ffc107,stroke-width:2px,color:#000;
 
     User(["User Interactions"])
     class User userLayer;
@@ -138,9 +138,9 @@ This is important because the GTK4 migration of the Shell also affects activitie
 
 ```mermaid
 flowchart LR
-    classDef shell fill:#d4edda,stroke:#28a745,stroke-width:2px;
-    classDef activity fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
-    classDef sys fill:#cce5ff,stroke:#007bff,stroke-width:1px;
+    classDef shell fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#000;
+    classDef activity fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#000;
+    classDef sys fill:#cce5ff,stroke:#007bff,stroke-width:1px,color:#000;
 
     subgraph CoreEnvironment ["Core Environment"]
         SS["Sugar Shell"]
@@ -181,8 +181,8 @@ Now the migration itself is not just replacing widgets. It is a transition from 
 
 ```mermaid
 flowchart LR
-    classDef legacy fill:#ffeeba,stroke:#ffc107,stroke-width:2px;
-    classDef modern fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    classDef legacy fill:#ffeeba,stroke:#ffc107,stroke-width:2px,color:#000;
+    classDef modern fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#000;
 
     subgraph LegacyArch ["Legacy Architecture (Current)"]
         direction TB
@@ -222,7 +222,7 @@ To make the migration structured, I will work component by component inside the 
 ```mermaid
 flowchart TD
     classDef main fill:#343a40,stroke:#212529,stroke-width:2px,color:#fff;
-    classDef comp fill:#e9ecef,stroke:#6c757d,stroke-width:2px;
+    classDef comp fill:#e9ecef,stroke:#6c757d,stroke-width:2px,color:#000;
 
     MainLoop["Sugar Shell Main Event Loop"]
     class MainLoop main;
