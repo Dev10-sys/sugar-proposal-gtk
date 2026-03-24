@@ -86,27 +86,46 @@ flowchart TD
     classDef runtimeLayer fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px;
     classDef osLayer fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
 
-    User([User Interactions]) ::: userLayer --> SS
+    User(["User Interactions"])
+    class User userLayer;
+
+    User --> SS
 
     subgraph ShellLayer ["Sugar Shell Core (Python)"]
-        SS[Sugar Shell Runtime] ::: shellLayer
-        SS --> F[Frame UI]
-        SS --> J[Journal Core]
-        SS --> CP[Control Panel]
+        SS["Sugar Shell Runtime"]
+        F["Frame UI"]
+        J["Journal Core"]
+        CP["Control Panel"]
+        
+        SS --> F
+        SS --> J
+        SS --> CP
     end
+    class SS,F,J,CP shellLayer;
 
     subgraph ToolkitIntegration ["UI & Binding Layer"]
-        SS --> PyG[PyGObject Bindings] ::: runtimeLayer
-        PyG --> GTK[GTK Framework] ::: runtimeLayer
+        PyG["PyGObject Bindings"]
+        GTK["GTK Framework"]
+        
+        SS --> PyG
+        PyG --> GTK
     end
+    class PyG,GTK runtimeLayer;
 
     subgraph OSLayer ["Linux System Environment"]
-        GTK --> Disp["Display Server<br/>Wayland / X11"] ::: osLayer
-        SS --> DBus[DBus Message Bus] ::: osLayer
-        DBus <--> Data[Sugar Datastore] ::: osLayer
-        DBus <--> NM[NetworkManager] ::: osLayer
-        DBus <--> GS[GSettings] ::: osLayer
+        Disp["Display Server<br/>Wayland / X11"]
+        DBus["DBus Message Bus"]
+        Data[("Sugar Datastore")]
+        NM[("NetworkManager")]
+        GS[("GSettings")]
+        
+        GTK --> Disp
+        SS --> DBus
+        DBus <--> Data
+        DBus <--> NM
+        DBus <--> GS
     end
+    class Disp,DBus,Data,NM,GS osLayer;
 ```
 
 **Diagram Flow (Mermaid):**
@@ -124,17 +143,29 @@ flowchart LR
     classDef sys fill:#cce5ff,stroke:#007bff,stroke-width:1px;
 
     subgraph CoreEnvironment ["Core Environment"]
-        SS[Sugar Shell] ::: shell -->|Manages Lifecycle| AM[Activity Manager]
+        SS["Sugar Shell"]
+        AM["Activity Manager"]
+        SS -->|Manages Lifecycle| AM
     end
+    class SS,AM shell;
 
-    AM -->|Launch Request| Act["Isolated Activity Instance<br/>e.g. Write, Browse"] ::: activity
+    Act["Isolated Activity Instance<br/>e.g. Write, Browse"]
+    class Act activity;
+    
+    AM -->|Launch Request| Act
 
     subgraph ShellProvidedServices ["Shell Provided Services"]
-        Act -.->|State Persistence| Jour[Journal Integration] ::: sys
-        Act -.->|File I/O| DS[Datastore Access] ::: sys
-        Act -.->|Data Transfer| Clip[Clipboard Service] ::: sys
-        Act -.->|Connection| Net[Network State] ::: sys
+        Jour["Journal Integration"]
+        DS[("Datastore Access")]
+        Clip["Clipboard Service"]
+        Net["Network State"]
+        
+        Act -.->|State Persistence| Jour
+        Act -.->|File I/O| DS
+        Act -.->|Data Transfer| Clip
+        Act -.->|Connection| Net
     end
+    class Jour,DS,Clip,Net sys;
     
     Jour -.-> SS
     DS -.-> SS
@@ -149,28 +180,35 @@ Because of this, I think that migrating the Sugar Shell to GTK4 is a base step. 
 Now the migration itself is not just replacing widgets. It is a transition from an older GTK3 and X11 based architecture to a GTK4 and Wayland compatible architecture.
 
 ```mermaid
-block-beta
-    columns 3
-    
-    %% Current Architecture
-    block:Legacy:1
-        Title1["Legacy Architecture"]
-        GTK3["GTK3 Framework"]
-        X11["X11 Display Server"]
-        DepAPI["Deprecated Container/Layout APIs"]
-    end
+flowchart LR
+    classDef legacy fill:#ffeeba,stroke:#ffc107,stroke-width:2px;
+    classDef modern fill:#d4edda,stroke:#28a745,stroke-width:2px;
 
-    space:1
-    
-    %% Target Architecture
-    block:Modern:1
-        Title2["Modern Architecture"]
-        GTK4["GTK4 Framework"]
-        Wayland["Wayland Compositor"]
-        ModAPI["Modern Controllers & CSS Providers"]
+    subgraph LegacyArch ["Legacy Architecture (Current)"]
+        direction TB
+        L1["Sugar Shell (Python)"]
+        L1 --> L2["PyGObject Binding"]
+        L2 --> L3["GTK3 Toolkit"]
+        L3 --> L4["Deprecated APIs<br/>VBox, HBox, Alignment"]
+        L4 --> L5[("X11 Display Server")]
     end
+    class L1,L2,L3,L4,L5 legacy;
+
+    subgraph TargetArch ["Modern Architecture (Target)"]
+        direction TB
+        T1["Sugar Shell (Python)"]
+        T1 --> T2["PyGObject Binding"]
+        T2 --> T3["GTK4 Toolkit"]
+        T3 --> T4["Modern APIs<br/>Box, Event Controllers"]
+        T3 --> T5["CSS Provider Styling"]
+        T3 --> T6["Native Display Handling"]
+        T4 --> T7[("Wayland Compositor<br/>X11 Fallback")]
+        T5 --> T7
+        T6 --> T7
+    end
+    class T1,T2,T3,T4,T5,T6,T7 modern;
     
-    Legacy --> Modern
+    LegacyArch ===>|Platform Migration Path| TargetArch
 ```
 
 **Diagram Flow:**
@@ -183,16 +221,25 @@ To make the migration structured, I will work component by component inside the 
 
 ```mermaid
 flowchart TD
-    classDef main fill:#343a40,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef comp fill:#e9ecef,stroke:#6c757d,stroke-width:1px;
+    classDef main fill:#343a40,stroke:#212529,stroke-width:2px,color:#fff;
+    classDef comp fill:#e9ecef,stroke:#6c757d,stroke-width:2px;
 
-    MainLoop[Sugar Shell Main Event Loop] ::: main
+    MainLoop["Sugar Shell Main Event Loop"]
+    class MainLoop main;
 
-    MainLoop --> F[Frame Overlay System] ::: comp
-    MainLoop --> J[Journal UI & Model] ::: comp
-    MainLoop --> AL[Activity Launcher System] ::: comp
-    MainLoop --> CP[Control Panel Modules] ::: comp
-    MainLoop --> C[Clipboard Management] ::: comp
+    F["Frame Overlay System"]
+    J["Journal UI & Model"]
+    AL["Activity Launcher System"]
+    CP["Control Panel Modules"]
+    C["Clipboard Management"]
+    
+    MainLoop --> F
+    MainLoop --> J
+    MainLoop --> AL
+    MainLoop --> CP
+    MainLoop --> C
+
+    class F,J,AL,CP,C comp;
 
     %% Showing dependencies
     F -.-> AL
