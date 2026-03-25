@@ -422,6 +422,174 @@ After migration, I will test the Frame, Journal, Clipboard, Control Panel, and A
 
 I will discuss each migration step with mentors before starting large changes, and I will submit changes in small pull requests so that each change can be reviewed and tested properly.
 
+### Technical Implementation Plan
+
+#### 1. Migration Strategy Overview
+
+| Phase | Area | Main Work | Risk Level | Output |
+| :---- | :--- | :-------- | :--------- | :----- |
+| **Phase 1** | Safety Fixes | Remove crashes, import-time display calls | High | Shell boots safely |
+| **Phase 2** | Display API | Replace Gdk.Screen with Gdk.Display | High | Wayland-safe display handling |
+| **Phase 3** | Containers | Replace GTK3 container APIs | Medium | UI works on GTK4 |
+| **Phase 4** | Events | Replace old event signals | Medium | Input works correctly |
+| **Phase 5** | Styling | GTK CSS migration | Low | UI styling works |
+| **Phase 6** | Wayland | Remove X11 assumptions | High | Wayland compatibility |
+| **Phase 7** | Testing | Stability and regression testing | High | Stable Shell |
+
+#### 2. Component Migration Priority
+
+| Priority | Component | Reason |
+| :------- | :-------- | :----- |
+| **1** | Frame System | Most dependent on screen, window, input |
+| **2** | Home View | Main desktop UI |
+| **3** | Activity Launcher | Needed for launching activities |
+| **4** | Journal | Large but separate component |
+| **5** | Control Panel | Uses deprecated widgets |
+| **6** | Clipboard | Small but display dependent |
+
+#### 3. GTK3 to GTK4 API Migration Plan
+
+| GTK3 API | GTK4 Replacement | Where Used |
+| :------- | :--------------- | :--------- |
+| `Gtk.Box.pack_start` | `Gtk.Box.append` | All UI files |
+| `Gtk.Box.pack_end` | `Gtk.Box.prepend` | Launcher, Journal |
+| `Gtk.EventBox` | `Gtk.Box` + EventController | Frame, Journal |
+| `Gtk.Alignment` | `Gtk.Box` + align/margin | Journal, Launcher |
+| `Gtk.Table` | `Gtk.Grid` | Control Panel |
+| `Gtk.HSeparator` | `Gtk.Separator` | Control Panel |
+| `Gdk.Screen` | `Gdk.Display` + Monitor | Frame, Home |
+| `modify_bg` / `modify_fg` | CSS Provider | Home, Launcher |
+| `key-press-event` | `EventControllerKey` | Home, Journal |
+| `button-press-event` | `GestureClick` | Frame |
+| `Gtk.AccelGroup` | `ShortcutController` | Home |
+| `Gtk.Invisible` | Wayland alternative | Frame |
+
+#### 4. Wayland Compatibility Plan
+
+| X11 Method | Problem | Wayland Solution |
+| :--------- | :------ | :--------------- |
+| `window.move()` | Not allowed | Use compositor positioning |
+| `Gdk.Screen.width()` | Removed | Use monitor geometry |
+| Foreign windows | Not supported | Remove dependency |
+| `Gtk.Invisible` | Not supported | Use event controllers |
+| Pointer global position | Restricted | Use local widget events |
+
+#### 5. Implementation Workflow
+
+```mermaid
+flowchart TD
+    %% Workflow Definition
+    Start([🚀 Start Migration])
+
+    subgraph CoreStabilisation ["Phase 1: Core System Stabilisation"]
+        direction TB
+        A["🛠️ Fix Import-time Crashes"]
+        B["🖥️ Replace Display APIs"]
+    end
+
+    subgraph APIMigration ["Phase 2: UI & Interaction Migration"]
+        direction TB
+        C["🗂️ Replace Container APIs"]
+        D["🖱️ Replace Event Handling"]
+        E["🎨 Replace Styling"]
+    end
+
+    subgraph WaylandCompat ["Phase 3: Wayland & Testing"]
+        direction TB
+        F["🐧 Fix Wayland Issues"]
+        G["🧪 Testing and Debugging"]
+    end
+
+    H([✅ Stable GTK4 Shell])
+
+    %% Flow
+    Start ===> CoreStabilisation
+    A ===> B
+    CoreStabilisation ===> APIMigration
+    B -.-> C
+    C ===> D
+    D ===> E
+    APIMigration ===> WaylandCompat
+    E -.-> F
+    F ===> G
+    WaylandCompat ===> H
+
+    %% Aesthetic Styling
+    classDef startEnd fill:#2ecc71,stroke:#27ae60,stroke-width:4px,color:#fff,font-weight:bold;
+    classDef process fill:#ecf0f1,stroke:#bdc3c7,stroke-width:2px;
+    classDef processTarget fill:#e8f8f5,stroke:#1abc9c,stroke-width:2px;
+    
+    class Start,H startEnd;
+    class A,B,C,D,E process;
+    class F,G processTarget;
+```
+
+#### 6. Development and Contribution Workflow
+
+```mermaid
+flowchart LR
+    %% Start
+    A(["🎯 Pick Component"])
+
+    %% Execution Loop
+    subgraph Execution ["Development Lifecycle"]
+        direction LR
+        B["🌿 Create Branch"]
+        C["⚙️ Migrate Small Part"]
+        B --> C
+    end
+
+    subgraph Verification ["Testing Lifecycle"]
+        direction LR
+        D["🏗️ Run Live Build"]
+        E["🖥️ Test on X11"]
+        F["🐧 Test on Wayland"]
+        D --> E --> F
+    end
+
+    subgraph Review ["Integration Lifecycle"]
+        direction LR
+        G["📩 Submit Pull Request"]
+        H["👀 Code Review"]
+        I["📥 Merge"]
+        G --> H --> I
+    end
+
+    %% Loop Back
+    J(["🔄 Next Component"])
+
+    %% Connections
+    A ===> Execution
+    Execution ===> Verification
+    Verification ===> Review
+    Review ===> J
+    J -.->|Iterate| A
+
+    %% Styling
+    classDef coreNode fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff;
+    classDef testNode fill:#f1c40f,stroke:#f39c12,stroke-width:2px;
+    classDef reviewNode fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff;
+    classDef endNode fill:#2c3e50,stroke:#8e44ad,stroke-width:3px,color:#fff;
+
+    class A,B,C coreNode;
+    class D,E,F testNode;
+    class G,H,I reviewNode;
+    class J endNode;
+```
+
+#### 7. Testing Plan
+
+| Component | Test |
+| :-------- | :--- |
+| **Frame** | Edge activation, panel show/hide |
+| **Home View** | Favorites view, list view |
+| **Journal** | Open, save, object chooser |
+| **Activity Launch** | Launch and stop activity |
+| **Clipboard** | Copy paste between activities |
+| **Control Panel** | Settings save |
+| **Wayland** | Shell startup without crash |
+| **DBus** | Activity lifecycle |
+
 ### How Will It Impact Sugar Labs
 
 The Sugar Shell is the main environment where all activities run. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services.
