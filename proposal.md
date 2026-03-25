@@ -115,7 +115,7 @@ This means the Sugar Shell sits between the user and the Linux system and acts a
 ```mermaid
 flowchart TD
     %% Top Level User Interaction
-    User((👤 User / Input Devices))
+    User(("User / Input Devices"))
 
     %% User Interface & System Display Layer
     subgraph UI_Layer ["User Interface & Display Level"]
@@ -125,7 +125,7 @@ flowchart TD
     end
 
     %% The Middle Layer (Core)
-    Shell{{"Sugar Shell\n(Python GTK)"}}
+    Shell{{"Sugar Shell\n(Python + GTK)"}}
 
     %% System Configuration
     subgraph Config_Layer ["System Configuration Level"]
@@ -138,9 +138,9 @@ flowchart TD
     DBus(("DBus Session Bus"))
 
     %% Background Services
-    subgraph Services_Layer ["Sugar Microservices & Applications"]
+    subgraph Services_Layer ["Sugar Services & Applications"]
         direction LR
-        Activities["Activities (Apps)"]
+        Activities["Activities"]
         Journal["Journal Service"]
         Notifications["Notifications"]
         Datastore["Sugar Datastore"]
@@ -149,7 +149,7 @@ flowchart TD
     %% Persistence Layer
     Storage[("File System Storage")]
 
-    %% Interactions emphasizing Sugar Shell as the Middle Layer
+    %% Interactions
     User -->|Interacts with| Shell
 
     Shell -->|Renders UI via| GTK
@@ -167,18 +167,19 @@ flowchart TD
 
     Datastore -->|Persists Data| Storage
 
-    %% Styling for Professional Architectural Look
-    style Shell fill:#ff9f43,stroke:#ee5253,stroke-width:4px,color:#fff,font-weight:bold
-    style DBus fill:#1dd1a1,stroke:#10ac84,stroke-width:2px,color:#fff
-    style GTK fill:#54a0ff,stroke:#2e86de,stroke-width:2px,color:#fff
-    style Display fill:#c8d6e5,stroke:#8395a7,stroke-width:1px
-    style GSettings fill:#c8d6e5,stroke:#8395a7,stroke-width:1px
-    style NetworkManager fill:#c8d6e5,stroke:#8395a7,stroke-width:1px
-    style Storage fill:#576574,stroke:#222f3e,stroke-width:2px,color:#fff
-    style Activities fill:#feca57,stroke:#ff9f43,stroke-width:1px
-    style Journal fill:#feca57,stroke:#ff9f43,stroke-width:1px
-    style Datastore fill:#feca57,stroke:#ff9f43,stroke-width:1px
-    style Notifications fill:#feca57,stroke:#ff9f43,stroke-width:1px
+    %% Styling
+    style User fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a
+    style Shell fill:#ff9f43,stroke:#e17055,stroke-width:4px,color:#1a1a1a,font-weight:bold
+    style DBus fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#1a1a1a
+    style GTK fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a
+    style Display fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style GSettings fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style NetworkManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Storage fill:#b2bec3,stroke:#636e72,stroke-width:2px,color:#1a1a1a
+    style Activities fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
+    style Journal fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
+    style Datastore fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
+    style Notifications fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
 ```
 
 _This diagram shows how the Sugar system is structured. The Sugar Shell sits between the user and the Linux system. It uses GTK for the user interface and communicates with system services using DBus. Activities, Journal, Datastore, NetworkManager, and Notifications all communicate with the Sugar Shell through DBus. This shows that the Sugar Shell is the central layer of the system._
@@ -220,7 +221,7 @@ So this migration involves updating container APIs, layout handling, display han
 ```mermaid
 flowchart LR
     %% Deprecated Components
-    subgraph Legacy ["🛑 GTK3 Legacy APIs"]
+    subgraph Legacy ["GTK3 Legacy APIs (Deprecated)"]
         direction TB
         EventBox["Gtk.EventBox"]
         GdkScreen["Gdk.Screen"]
@@ -230,7 +231,7 @@ flowchart LR
     end
 
     %% Modern Equivalents
-    subgraph Modern ["✅ GTK4 Modern APIs"]
+    subgraph Modern ["GTK4 Modern APIs (Replacements)"]
         direction TB
         GestureController["Gtk.GestureClick / Controllers"]
         GdkDisplay["Gdk.Display / Monitors"]
@@ -249,8 +250,8 @@ flowchart LR
     ModifyBG --> CSSStyling
 
     %% Styling
-    classDef legacy fill:#ffcccc,stroke:#e74c3c,stroke-width:2px,color:#c0392b;
-    classDef modern fill:#d5f5e3,stroke:#2ecc71,stroke-width:2px,color:#27ae60;
+    classDef legacy fill:#ffcccc,stroke:#c0392b,stroke-width:2px,color:#1a1a1a;
+    classDef modern fill:#d5f5e3,stroke:#27ae60,stroke-width:2px,color:#1a1a1a;
 
     class Legacy,EventBox,GdkScreen,ContainerAPI,OldSignals,ModifyBG legacy;
     class Modern,GestureController,GdkDisplay,NewLayoutAPI,EventControllers,CSSStyling modern;
@@ -265,7 +266,7 @@ To make the migration structured, I will work component by component inside the 
 ```mermaid
 flowchart TD
     %% Base Level
-    Main["⚙️ main.py (Entry Point)"]
+    Main["main.py (Entry Point)"]
 
     %% Core Components
     subgraph Core ["Sugar Shell Internal Modules"]
@@ -274,31 +275,31 @@ flowchart TD
 
         %% Views Section
         subgraph Views ["Shell Views & Logic"]
-            Home["🏠 Home View"]
-            Journal["📓 Journal"]
-            ControlPanel["⚙️ Control Panel"]
+            Home["Home View"]
+            Journal["Journal"]
+            ControlPanel["Control Panel"]
         end
 
         %% Frame Section
         subgraph FrameSystem ["Frame Overlay Elements"]
-            Frame["🔲 Frame System"]
-            Clipboard["📋 Clipboard Tray"]
-            Devices["💾 Device Tray"]
-            Friends["🌐 Network Tray"]
-            ActivitiesTray["🔄 Running Activities"]
+            Frame["Frame System"]
+            Clipboard["Clipboard Tray"]
+            Devices["Device Tray"]
+            Friends["Network Tray"]
+            ActivitiesTray["Running Activities"]
         end
 
         %% Management Section
         subgraph Mngmt ["Lifecycle & App Management"]
-            Launcher["🚀 Activity Launcher"]
-            ActivityManager["📦 Activity Lifecycle Manager"]
+            Launcher["Activity Launcher"]
+            ActivityManager["Activity Lifecycle Manager"]
         end
     end
 
     %% External Systems via DBus
     subgraph Env ["OS Environment"]
-        DBus(("🔌 DBus Services"))
-        WindowManager["🪟 Window Tracking"]
+        DBus(("DBus Services"))
+        WindowManager["Window Tracking"]
         GSettings["GSettings"]
         NetworkManager["NetworkManager"]
     end
@@ -329,11 +330,23 @@ flowchart TD
     ShellModel --> NetworkManager
 
     %% Styling
-    style Main fill:#bdc3c7,stroke:#95a5a6,stroke-width:2px
-    style ShellModel fill:#f39c12,stroke:#d35400,stroke-width:4px,color:#fff
-    style DBus fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
-    style ActivityManager fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
-    style FrameSystem fill:#e8f8f5,stroke:#1abc9c,stroke-width:1px
+    style Main fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a
+    style ShellModel fill:#ff9f43,stroke:#e17055,stroke-width:4px,color:#1a1a1a,font-weight:bold
+    style DBus fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a
+    style ActivityManager fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#1a1a1a
+    style Home fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Journal fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style ControlPanel fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Frame fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Clipboard fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Devices fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Friends fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style ActivitiesTray fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style Launcher fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style WindowManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style GSettings fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style NetworkManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
+    style FrameSystem fill:#f0f3f5,stroke:#b2bec3,stroke-width:1px
 ```
 
 _The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
@@ -392,8 +405,8 @@ flowchart TD
     Phase6 ===> Phase7
 
     %% Styling
-    classDef phaseNode fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff,font-weight:bold;
-    classDef finalNode fill:#2ecc71,stroke:#27ae60,stroke-width:4px,color:#fff,font-weight:bold;
+    classDef phaseNode fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a,font-weight:bold;
+    classDef finalNode fill:#55efc4,stroke:#00b894,stroke-width:4px,color:#1a1a1a,font-weight:bold;
 
     class Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phaseNode;
     class Phase7 finalNode;
@@ -479,28 +492,28 @@ I will discuss each migration step with mentors before starting large changes, a
 ```mermaid
 flowchart TD
     %% Workflow Definition
-    Start([🚀 Start Migration])
+    Start(["Start Migration"])
 
     subgraph CoreStabilisation ["Phase 1: Core System Stabilisation"]
         direction TB
-        A["🛠️ Fix Import-time Crashes"]
-        B["🖥️ Replace Display APIs"]
+        A["Fix Import-time Crashes"]
+        B["Replace Display APIs"]
     end
 
     subgraph APIMigration ["Phase 2: UI & Interaction Migration"]
         direction TB
-        C["🗂️ Replace Container APIs"]
-        D["🖱️ Replace Event Handling"]
-        E["🎨 Replace Styling"]
+        C["Replace Container APIs"]
+        D["Replace Event Handling"]
+        E["Replace Styling"]
     end
 
     subgraph WaylandCompat ["Phase 3: Wayland & Testing"]
         direction TB
-        F["🐧 Fix Wayland Issues"]
-        G["🧪 Testing and Debugging"]
+        F["Fix Wayland Issues"]
+        G["Testing and Debugging"]
     end
 
-    H([✅ Stable GTK4 Shell])
+    H(["Stable GTK4 Shell"])
 
     %% Flow
     Start ===> CoreStabilisation
@@ -514,11 +527,11 @@ flowchart TD
     F ===> G
     WaylandCompat ===> H
 
-    %% Aesthetic Styling
-    classDef startEnd fill:#2ecc71,stroke:#27ae60,stroke-width:4px,color:#fff,font-weight:bold;
-    classDef process fill:#ecf0f1,stroke:#bdc3c7,stroke-width:2px;
-    classDef processTarget fill:#e8f8f5,stroke:#1abc9c,stroke-width:2px;
-    
+    %% Styling
+    classDef startEnd fill:#55efc4,stroke:#00b894,stroke-width:4px,color:#1a1a1a,font-weight:bold;
+    classDef process fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a;
+    classDef processTarget fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#1a1a1a;
+
     class Start,H startEnd;
     class A,B,C,D,E process;
     class F,G processTarget;
@@ -529,34 +542,34 @@ flowchart TD
 ```mermaid
 flowchart LR
     %% Start
-    A(["🎯 Pick Component"])
+    A(["Pick Component"])
 
     %% Execution Loop
     subgraph Execution ["Development Lifecycle"]
         direction LR
-        B["🌿 Create Branch"]
-        C["⚙️ Migrate Small Part"]
+        B["Create Branch"]
+        C["Migrate Small Part"]
         B --> C
     end
 
     subgraph Verification ["Testing Lifecycle"]
         direction LR
-        D["🏗️ Run Live Build"]
-        E["🖥️ Test on X11"]
-        F["🐧 Test on Wayland"]
+        D["Run Sugar Live Build"]
+        E["Test on X11"]
+        F["Test on Wayland"]
         D --> E --> F
     end
 
     subgraph Review ["Integration Lifecycle"]
         direction LR
-        G["📩 Submit Pull Request"]
-        H["👀 Code Review"]
-        I["📥 Merge"]
+        G["Submit Pull Request"]
+        H["Code Review"]
+        I["Merge"]
         G --> H --> I
     end
 
     %% Loop Back
-    J(["🔄 Next Component"])
+    J(["Next Component"])
 
     %% Connections
     A ===> Execution
@@ -566,10 +579,10 @@ flowchart LR
     J -.->|Iterate| A
 
     %% Styling
-    classDef coreNode fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff;
-    classDef testNode fill:#f1c40f,stroke:#f39c12,stroke-width:2px;
-    classDef reviewNode fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff;
-    classDef endNode fill:#2c3e50,stroke:#8e44ad,stroke-width:3px,color:#fff;
+    classDef coreNode fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a;
+    classDef testNode fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#1a1a1a;
+    classDef reviewNode fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#1a1a1a;
+    classDef endNode fill:#636e72,stroke:#2d3436,stroke-width:3px,color:#fff;
 
     class A,B,C coreNode;
     class D,E,F testNode;
@@ -624,9 +637,9 @@ flowchart TD
 
         subgraph WaylandRestrictions ["Wayland Protocol Restrictions (Security & Design)"]
             direction TB
-            Restriction1["🚫 No Absolute Window Moves (Client-side)"]
-            Restriction2["🚫 No Arbitrary Foreign Window Tracking"]
-            Restriction3["✅ Monitor-Based Local Geometry Only"]
+            Restriction1["No Absolute Window Moves (Client-side)"]
+            Restriction2["No Arbitrary Foreign Window Tracking"]
+            Restriction3["Monitor-Based Local Geometry Only"]
         end
 
         NewLinux --> Wayland
@@ -642,10 +655,10 @@ flowchart TD
     Result{{"GTK4 & Wayland Migration Required\n(Updating APIs & Focus Systems)"}}
 
     %% Styling
-    classDef legacy fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px;
-    classDef conflict fill:#ff7675,stroke:#d63031,stroke-width:2px,color:#fff;
-    classDef modern fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#fff;
-    classDef target fill:#55efc4,stroke:#00b894,stroke-width:3px,color:#2d3436,font-weight:bold;
+    classDef legacy fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#1a1a1a;
+    classDef conflict fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#1a1a1a;
+    classDef modern fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a;
+    classDef target fill:#55efc4,stroke:#00b894,stroke-width:3px,color:#1a1a1a,font-weight:bold;
 
     class LegacyEnv,X11Features legacy;
     class WaylandRestrictions,Restriction1,Restriction2,Restriction3 conflict;
