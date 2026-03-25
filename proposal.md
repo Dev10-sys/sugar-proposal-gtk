@@ -69,9 +69,11 @@ From what I have studied while working on the Sugar desktop, the Sugar Shell is 
 
 From the issues I worked on, I noticed that the main problem is not only deprecated APIs but the platform change from X11 to Wayland and from GTK3 to GTK4. The Linux desktop ecosystem is moving towards GTK4 and Wayland, and if Sugar stays on GTK3 and X11, it will become harder to run and maintain Sugar on modern systems.
 
-So the goal of this project is to keep the Sugar behavior the same for users, but update the internal implementation so that it works on GTK4 and Wayland.
+So the goal of this project is to keep the user experience and behavior of Sugar the same, while updating the internal implementation so that the Sugar Shell works on GTK4 and runs correctly on Wayland based systems.
 
 The main parts I will be working on are the Frame, Journal, Clipboard, Control Panel, and Activity launching system, because these components form the core of the Sugar desktop environment.
+
+Since Sugar is a full desktop environment and not just a single application, changes in the shell can affect multiple components. So my approach will be to migrate small parts, test them in a running Sugar session, and only then move to the next component.
 
 ### System Architecture Overview
 
@@ -269,6 +271,8 @@ flowchart TD
     subgraph Env ["OS Environment"]
         DBus(("🔌 DBus Services"))
         WindowManager["🪟 Window Tracking"]
+        GSettings["GSettings"]
+        NetworkManager["NetworkManager"]
     end
 
     %% Core routing
@@ -293,6 +297,8 @@ flowchart TD
     %% Interaction with Operating System
     ActivityManager ===>|Orchestrates processes via| DBus
     ActivityManager -.->|Observes events from| WindowManager
+    ShellModel --> GSettings
+    ShellModel --> NetworkManager
 
     %% Styling
     style Main fill:#bdc3c7,stroke:#95a5a6,stroke-width:2px
@@ -369,7 +375,7 @@ _The migration will be done in phases. After each phase, the system will be test
 
 I will migrate and test the system at the same time. After each migration phase, I will run the Sugar Shell and test activity launch, Journal, Frame, and Control Panel on both X11 and Wayland to make sure the system remains stable.
 
-One of the most complex parts of this migration is the Frame system because it depends on screen geometry, window positioning, and input events. These areas are affected by GTK4 API changes and Wayland restrictions. So I will migrate the Frame carefully and test it on both X11 and Wayland to make sure the overlay panels, hot corners, and clipboard tray work correctly.
+One of the most complex parts of this migration is the Frame system because it depends on screen geometry, window positioning, focus handling, and input events. These areas are affected by GTK4 API changes and Wayland restrictions, so the Frame must be migrated and tested very carefully.
 
 **1. GTK4 API Migration**
 I will replace deprecated GTK3 APIs with GTK4 equivalents. This includes container APIs, layout APIs, widget APIs, and dialog APIs. This work will be done component by component in the Sugar Shell.
@@ -385,6 +391,8 @@ Some parts of Sugar assume X11 behavior. These parts need to be updated so that 
 
 **5. Testing and Stability**
 After migration, I will test the Frame, Journal, Clipboard, Control Panel, and Activity launching system to make sure the system works correctly and does not crash.
+
+I will discuss each migration step with mentors before starting large changes, and I will submit changes in small pull requests so that each change can be reviewed and tested properly.
 
 ### How Will It Impact Sugar Labs
 
@@ -453,9 +461,7 @@ flowchart TD
 _This diagram shows why Wayland support requires changes in Sugar. The old Sugar system depends on X11 specific features like window positioning and foreign windows, which are not supported in Wayland. Therefore the Sugar Shell needs to be updated to work correctly on Wayland._
 
 If Sugar is not migrated, it may face compatibility and maintenance problems in the future.
-So I see this project not just as a UI migration, but as a platform transition that helps Sugar run on modern Linux systems and makes future development easier.
-
-This project reduces technical debt in the Sugar Shell and makes future development easier because new features can be built on GTK4 instead of maintaining deprecated GTK3 code.
+So I see this project not just as a UI migration, but as a platform transition. This work helps Sugar run on modern Linux systems, reduces technical debt in the Sugar Shell, and makes future development easier because new features can be built on GTK4 instead of maintaining deprecated GTK3 code.
 
 ### Technologies I Will Be Using
 
@@ -473,3 +479,15 @@ This project reduces technical debt in the Sugar Shell and makes future developm
 | **Networking**           | NetworkManager  |
 
 Most of the Sugar Shell code is written in Python and uses PyGObject to interact with GTK, so most of the migration work will involve updating GTK APIs and display handling in Python code.
+
+### Deliverables and Expected Results
+
+By the end of this project, the following results are expected:
+
+- Sugar Shell components such as Frame, Journal, Clipboard, Control Panel, and Activity Launcher run on GTK4.
+- Deprecated GTK3 APIs in migrated components are replaced with GTK4 APIs.
+- Sugar Shell starts and runs correctly on Wayland without display related crashes.
+- Activity launch, Journal access, clipboard, and datastore operations work correctly after migration.
+- The migration changes are documented so that other developers can continue migrating remaining components.
+
+The main goal is to make the Sugar Shell stable on GTK4 and compatible with Wayland so that future development can continue on modern Linux systems.
