@@ -826,3 +826,30 @@ I will maintain a weekly progress blog describing the work completed, challenges
 ### 7.8 Post GSoC Plans
 
 After GSoC, I plan to continue contributing to Sugar Labs and complete any remaining GTK4 migration work in the Sugar Shell. I would also like to help in migrating more Sugar activities to GTK4 and improving Wayland compatibility. I plan to remain an active contributor in the Sugar Labs community and help new contributors get started with Sugar development.
+
+## 8. Why This Project is Important Right Now
+
+Stabilizing the Sugar Shell on GTK4 and Wayland is a foundational step for the entire Sugar desktop ecosystem.
+
+- **Enabling Platform-wide Transition:** The Sugar Shell acts as the base environment. If the Shell does not run correctly on GTK4 and Wayland, it blocks the transition for activities and downstream distributions.
+- **Parallel Development:** Activity porting using `sugar-toolkit-gtk4` is already underway. A stable GTK4 Shell is required as a reliable testing environment for these modern activities.
+- **Reducing Technical Debt:** As Linux distributions move away from X11 and GTK3, migrating the core Shell components ensures Sugar remains maintainable and compatible with modern hardware and software standards.
+
+## 9. Why I Am a Good Fit for This Project
+
+My existing contributions and technical understanding of the Sugar Shell make me well-prepared for this migration.
+
+- **Direct Contribution History:** I have worked extensively on the Frame, Journal, Clipboard, Control Panel, and Datastore components, gaining a deep understanding of Shell architecture and DBus communication.
+- **Bug-fixing Experience:** I have successfully patched runtime display access crashes, Wayland-specific startup issues, and deprecated GTK3 API usage in the Sugar repository.
+- **GTK4 Experimentation:** I have already started experimenting with the `sugar-toolkit-gtk4` and activity migration to understand the practical challenges of drawing, input handling, and container layout changes.
+- **Architectural Understanding:** I recognize the Sugar Shell as a full desktop environment with complex lifecycle management, which allows me to handle the migration with the necessary care for system stability.
+
+## 10. Post GSoC Long Term Plans with Sugar Labs
+
+My commitment to Sugar Labs extends beyond the GSoC coding period.
+
+- **Ongoing Maintenance:** I plan to finish any remaining GTK4 migration work and continue fixing bugs in the Shell even after the program ends.
+- **Activity Porting Support:** I will assist in porting more Sugar activities to GTK4, ensuring they integrate seamlessly with the newly migrated Shell.
+- **Mentoring & Onboarding:** I want to help new contributors understand the Sugar codebase, particularly in areas like GTK, activity management, and debugging, making it easier for others to join the project.
+- **Sustained Community Engagement:** I intend to remain an active member of the community, taking on more responsibility in maintaining core components as I gain more experience.
+
