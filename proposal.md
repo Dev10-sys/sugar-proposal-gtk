@@ -700,3 +700,46 @@ By the end of this project, the following results are expected:
 - The migration changes are documented so that other developers can continue migrating remaining components.
 
 The main goal is to make the Sugar Shell stable on GTK4 and compatible with Wayland so that future development can continue on modern Linux systems.
+
+## 7. Project Timeline and Schedule of Deliverables
+
+The following is a detailed timeline for the project, broken down into specific phases and milestones:
+
+*   **7.0 Pre–Community Bonding Period**
+*   **7.1 Community Bonding Period (May 1 – May 24)**
+*   **7.2 Coding Period Phase 1 (May 25 – July 10)**
+*   **7.3 Midterm Evaluation Deliverables**
+*   **7.4 Coding Period Phase 2 (July 11 – August 24)**
+*   **7.5 Final Evaluation Deliverables**
+*   **7.6 Weekly Time Commitment**
+*   **7.7 Progress Reporting Plan**
+*   **7.8 Post GSoC Plans**
+
+### 7.0 Pre–Community Bonding Period
+
+Before the official community bonding period, I will continue contributing to the Sugar repository and focus on understanding the Sugar Shell architecture in detail. I will study the existing GTK3 code paths, identify areas that still depend on X11 specific APIs, and review the current progress of GTK4 migration in Sugar and related projects.
+
+During this period, I will also complete the development environment setup for building and testing Sugar Shell from source using Sugar Live Build. I will test the Sugar Shell on both X11 and Wayland sessions to understand current compatibility issues and runtime behavior.
+
+I will begin reviewing and documenting the GTK3 to GTK4 API changes that are relevant to Sugar Shell components such as the Frame, Home View, Journal, and Control Panel. This preparation will help in starting the coding phase earlier and reduce delays during the official coding period.
+
+I also plan to continue submitting small patches and fixes related to GTK4 compatibility and Wayland safety so that I remain actively involved with the Sugar Labs development workflow before the coding period begins.
+
+### 7.1 Community Bonding Period (May 1 – May 24)
+
+#### Week 1 (May 1 – May 7)
+
+During this week, I will interact closely with my mentors and the Sugar Labs community to finalize the project scope and priorities for the GTK4 migration of the Sugar Shell. We will identify which components should be migrated first based on complexity and impact, with special focus on the Frame system, Journal integration, and Control Panel components. I will also finalize the communication schedule with mentors for weekly progress meetings.
+
+#### Week 2 (May 8 – May 14)
+
+In this week, I will prepare a detailed technical migration plan. This includes mapping GTK3 APIs currently used in Sugar Shell to their GTK4 equivalents, identifying deprecated APIs, and planning the migration strategy for display handling, input handling, and window management. I will also prepare a testing strategy for both X11 and Wayland environments.
+
+#### Week 3 (May 15 – May 21)
+
+During this week, I will begin working on small GTK4 migration tasks such as replacing deprecated GTK3 widgets, updating event handling to GTK4 Event Controllers, and removing minor X11 dependent code where possible. These initial changes will serve as preparation for the main migration work during the coding period.
+
+#### Week 4 (May 22 – May 24)
+
+In the final week of the community bonding period, I will finalize the repository workflow, testing workflow, and documentation structure for the project. I will ensure that the build environment, testing environment, and debugging tools are fully working so that the coding phase can begin smoothly on May 25.
+
