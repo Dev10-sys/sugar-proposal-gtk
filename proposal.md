@@ -67,7 +67,7 @@ The goal of this project is to migrate the Sugar Shell from GTK3 to GTK4 and imp
 
 Since the Sugar Shell is the base layer on which activities depend for launching, datastore access, and system services, stabilizing the Shell on GTK4 will make future activity migration and full Wayland support easier and more reliable.
 
-The work will be implemented and tested using Sugar Live Build, and testing will be performed on both X11 and Wayland environments to ensure stability and compatibility.
+The work will be implemented and tested using Sugar Live Build, and testing will be performed on both X11 and Wayland environments to ensure stability and compatibility. This project will be implemented in small incremental patches and tested continuously on both X11 and Wayland to ensure system stability during the migration process.
 
 ## Problem Statement
 
@@ -83,7 +83,7 @@ Another complex component is the Frame system, which depends heavily on screen g
 
 The Sugar Shell is also tightly integrated with DBus services for activity lifecycle management, Journal access, datastore communication, and system services like NetworkManager and GSettings. The GTK4 migration must ensure that these DBus-based workflows continue to work correctly and that activity launching, switching, and stopping are not affected by the migration.
 
-Because the Sugar Shell is the core environment where all activities run, any instability in the Shell affects the entire system. Therefore, the migration must be done in a structured way so that the system remains usable and stable during the transition from GTK3 to GTK4 and from X11 to Wayland.
+Because the Sugar Shell is the core environment where all activities run, any instability in the Shell affects the entire system. Therefore, the migration must be done in a structured way so that the system remains usable and stable during the transition from GTK3 to GTK4 and from X11 to Wayland. Another important challenge is that GTK4 uses a different rendering model and input handling system, so parts of the Sugar Shell that depend on old event signals and drawing methods must be updated to GTK4 event controllers and modern rendering APIs.
 
 ## Project Details
 
@@ -439,53 +439,53 @@ I will discuss each migration step with mentors before starting large changes, a
 
 #### 1. Migration Strategy Overview
 
-| Phase | Area | Main Work | Risk Level | Output |
-| :---- | :--- | :-------- | :--------- | :----- |
-| **Phase 1** | Safety Fixes | Remove crashes, import-time display calls | High | Shell boots safely |
-| **Phase 2** | Display API | Replace Gdk.Screen with Gdk.Display | High | Wayland-safe display handling |
-| **Phase 3** | Containers | Replace GTK3 container APIs | Medium | UI works on GTK4 |
-| **Phase 4** | Events | Replace old event signals | Medium | Input works correctly |
-| **Phase 5** | Styling | GTK CSS migration | Low | UI styling works |
-| **Phase 6** | Wayland | Remove X11 assumptions | High | Wayland compatibility |
-| **Phase 7** | Testing | Stability and regression testing | High | Stable Shell |
+| Phase       | Area         | Main Work                                 | Risk Level | Output                        |
+| :---------- | :----------- | :---------------------------------------- | :--------- | :---------------------------- |
+| **Phase 1** | Safety Fixes | Remove crashes, import-time display calls | High       | Shell boots safely            |
+| **Phase 2** | Display API  | Replace Gdk.Screen with Gdk.Display       | High       | Wayland-safe display handling |
+| **Phase 3** | Containers   | Replace GTK3 container APIs               | Medium     | UI works on GTK4              |
+| **Phase 4** | Events       | Replace old event signals                 | Medium     | Input works correctly         |
+| **Phase 5** | Styling      | GTK CSS migration                         | Low        | UI styling works              |
+| **Phase 6** | Wayland      | Remove X11 assumptions                    | High       | Wayland compatibility         |
+| **Phase 7** | Testing      | Stability and regression testing          | High       | Stable Shell                  |
 
 #### 2. Component Migration Priority
 
-| Priority | Component | Reason |
-| :------- | :-------- | :----- |
-| **1** | Frame System | Most dependent on screen, window, input |
-| **2** | Home View | Main desktop UI |
-| **3** | Activity Launcher | Needed for launching activities |
-| **4** | Journal | Large but separate component |
-| **5** | Control Panel | Uses deprecated widgets |
-| **6** | Clipboard | Small but display dependent |
+| Priority | Component         | Reason                                  |
+| :------- | :---------------- | :-------------------------------------- |
+| **1**    | Frame System      | Most dependent on screen, window, input |
+| **2**    | Home View         | Main desktop UI                         |
+| **3**    | Activity Launcher | Needed for launching activities         |
+| **4**    | Journal           | Large but separate component            |
+| **5**    | Control Panel     | Uses deprecated widgets                 |
+| **6**    | Clipboard         | Small but display dependent             |
 
 #### 3. GTK3 to GTK4 API Migration Plan
 
-| GTK3 API | GTK4 Replacement | Where Used |
-| :------- | :--------------- | :--------- |
-| `Gtk.Box.pack_start` | `Gtk.Box.append` | All UI files |
-| `Gtk.Box.pack_end` | `Gtk.Box.prepend` | Launcher, Journal |
-| `Gtk.EventBox` | `Gtk.Box` + EventController | Frame, Journal |
-| `Gtk.Alignment` | `Gtk.Box` + align/margin | Journal, Launcher |
-| `Gtk.Table` | `Gtk.Grid` | Control Panel |
-| `Gtk.HSeparator` | `Gtk.Separator` | Control Panel |
-| `Gdk.Screen` | `Gdk.Display` + Monitor | Frame, Home |
-| `modify_bg` / `modify_fg` | CSS Provider | Home, Launcher |
-| `key-press-event` | `EventControllerKey` | Home, Journal |
-| `button-press-event` | `GestureClick` | Frame |
-| `Gtk.AccelGroup` | `ShortcutController` | Home |
-| `Gtk.Invisible` | Wayland alternative | Frame |
+| GTK3 API                  | GTK4 Replacement            | Where Used        |
+| :------------------------ | :-------------------------- | :---------------- |
+| `Gtk.Box.pack_start`      | `Gtk.Box.append`            | All UI files      |
+| `Gtk.Box.pack_end`        | `Gtk.Box.prepend`           | Launcher, Journal |
+| `Gtk.EventBox`            | `Gtk.Box` + EventController | Frame, Journal    |
+| `Gtk.Alignment`           | `Gtk.Box` + align/margin    | Journal, Launcher |
+| `Gtk.Table`               | `Gtk.Grid`                  | Control Panel     |
+| `Gtk.HSeparator`          | `Gtk.Separator`             | Control Panel     |
+| `Gdk.Screen`              | `Gdk.Display` + Monitor     | Frame, Home       |
+| `modify_bg` / `modify_fg` | CSS Provider                | Home, Launcher    |
+| `key-press-event`         | `EventControllerKey`        | Home, Journal     |
+| `button-press-event`      | `GestureClick`              | Frame             |
+| `Gtk.AccelGroup`          | `ShortcutController`        | Home              |
+| `Gtk.Invisible`           | Wayland alternative         | Frame             |
 
 #### 4. Wayland Compatibility Plan
 
-| X11 Method | Problem | Wayland Solution |
-| :--------- | :------ | :--------------- |
-| `window.move()` | Not allowed | Use compositor positioning |
-| `Gdk.Screen.width()` | Removed | Use monitor geometry |
-| Foreign windows | Not supported | Remove dependency |
-| `Gtk.Invisible` | Not supported | Use event controllers |
-| Pointer global position | Restricted | Use local widget events |
+| X11 Method              | Problem       | Wayland Solution           |
+| :---------------------- | :------------ | :------------------------- |
+| `window.move()`         | Not allowed   | Use compositor positioning |
+| `Gdk.Screen.width()`    | Removed       | Use monitor geometry       |
+| Foreign windows         | Not supported | Remove dependency          |
+| `Gtk.Invisible`         | Not supported | Use event controllers      |
+| Pointer global position | Restricted    | Use local widget events    |
 
 #### 5. Implementation Workflow
 
@@ -592,16 +592,16 @@ flowchart LR
 
 #### 7. Testing Plan
 
-| Component | Test |
-| :-------- | :--- |
-| **Frame** | Edge activation, panel show/hide |
-| **Home View** | Favorites view, list view |
-| **Journal** | Open, save, object chooser |
-| **Activity Launch** | Launch and stop activity |
-| **Clipboard** | Copy paste between activities |
-| **Control Panel** | Settings save |
-| **Wayland** | Shell startup without crash |
-| **DBus** | Activity lifecycle |
+| Component           | Test                             |
+| :------------------ | :------------------------------- |
+| **Frame**           | Edge activation, panel show/hide |
+| **Home View**       | Favorites view, list view        |
+| **Journal**         | Open, save, object chooser       |
+| **Activity Launch** | Launch and stop activity         |
+| **Clipboard**       | Copy paste between activities    |
+| **Control Panel**   | Settings save                    |
+| **Wayland**         | Shell startup without crash      |
+| **DBus**            | Activity lifecycle               |
 
 ### How Will It Impact Sugar Labs
 
@@ -701,19 +701,23 @@ By the end of this project, the following results are expected:
 
 The main goal is to make the Sugar Shell stable on GTK4 and compatible with Wayland so that future development can continue on modern Linux systems.
 
+All migrated components will be tested in a running Sugar session, and the migration work will be submitted as multiple pull requests to the Sugar repository. The project will also include migration documentation so that other developers can continue migrating remaining components.
+
 ## 7. Project Timeline and Schedule of Deliverables
 
-The following is a detailed timeline for the project, broken down into specific phases and milestones:
+The following is a
 
-*   **7.0 Pre–Community Bonding Period**
-*   **7.1 Community Bonding Period (May 1 – May 24)**
-*   **7.2 Coding Period Phase 1 (May 25 – July 10)**
-*   **7.3 Midterm Evaluation Deliverables**
-*   **7.4 Coding Period Phase 2 (July 11 – August 24)**
-*   **7.5 Final Evaluation Deliverables**
-*   **7.6 Weekly Time Commitment**
-*   **7.7 Progress Reporting Plan**
-*   **7.8 Post GSoC Plans**
+timeline for the project, broken down into specific phases and milestones:
+
+- **7.0 Pre–Community Bonding Period**
+- **7.1 Community Bonding Period (May 1 – May 24)**
+- **7.2 Coding Period Phase 1 (May 25 – July 10)**
+- **7.3 Midterm Evaluation Deliverables**
+- **7.4 Coding Period Phase 2 (July 11 – August 24)**
+- **7.5 Final Evaluation Deliverables**
+- **7.6 Weekly Time Commitment**
+- **7.7 Progress Reporting Plan**
+- **7.8 Post GSoC Plans**
 
 ### 7.0 Pre–Community Bonding Period
 
@@ -743,3 +747,82 @@ During this week, I will begin working on small GTK4 migration tasks such as rep
 
 In the final week of the community bonding period, I will finalize the repository workflow, testing workflow, and documentation structure for the project. I will ensure that the build environment, testing environment, and debugging tools are fully working so that the coding phase can begin smoothly on May 25.
 
+### 7.2 Coding Period Phase 1 (May 25 – July 10)
+
+#### Week 1 (May 25 – May 31)
+
+The coding period will begin with setting up a GTK4 development branch and ensuring that the Sugar Shell builds and runs correctly with the GTK4 environment. I will start with critical stability fixes such as removing import-time display access, fixing crashes related to display initialization, and ensuring that the Shell can start reliably.
+
+#### Week 2 (June 1 – June 7)
+
+During this week, I will work on migrating display and monitor related APIs. This includes replacing deprecated Gdk.Screen APIs with Gdk.Display and monitor-based geometry APIs. This step is important for Wayland compatibility and for components such as the Frame and Home View which depend on screen geometry.
+
+#### Week 3 (June 8 – June 14)
+
+In this week, I will begin migrating GTK3 container APIs to GTK4 container and layout APIs. This includes replacing pack_start, pack_end, Gtk.EventBox, Gtk.Alignment, and other deprecated container widgets. The focus will be on the Home View and basic Shell UI components.
+
+#### Week 4 (June 15 – June 21)
+
+During this week, I will migrate event handling from old GTK3 event signals to GTK4 Event Controllers such as GestureClick and EventControllerKey. This is especially important for the Frame system, keyboard shortcuts, and activity switching behavior.
+
+#### Week 5 (June 22 – July 10)
+
+In this period, I will focus on migrating and testing the Frame system, since it is one of the most complex components and depends heavily on display geometry, input handling, and window behavior. The Frame will be tested carefully on both X11 and Wayland environments to ensure correct behavior.
+
+### 7.3 Midterm Evaluation Deliverables
+
+By the midterm evaluation, the following work is expected to be completed:
+
+- GTK4 development environment set up and working Sugar Shell build.
+- Display and monitor API migration from Gdk.Screen to Gdk.Display.
+- Migration of GTK3 container APIs to GTK4 layout APIs in core Shell components.
+- Migration of event handling to GTK4 Event Controllers.
+- Partial migration and testing of the Frame system.
+- Sugar Shell starts and runs without display related crashes.
+- Basic testing completed on both X11 and Wayland environments.
+- Initial migration documentation and testing notes.
+
+### 7.4 Coding Period Phase 2 (July 11 – August 24)
+
+#### Week 6 (July 11 – July 17)
+
+During this week, I will continue the migration of remaining Shell components such as the Journal and Activity Launcher. These components involve dialogs, object chooser, and activity lifecycle integration.
+
+#### Week 7 (July 18 – July 24)
+
+In this week, I will work on migrating Control Panel components and settings related UI, including deprecated GTK widgets and layout APIs used in the Control Panel.
+
+#### Week 8 (July 25 – July 31)
+
+During this week, I will migrate Clipboard, Notifications, and tray components. These components depend on display handling and event handling, so they will be tested carefully after migration.
+
+#### Week 9 (August 1 – August 7)
+
+This week will be focused on Wayland compatibility fixes. I will remove remaining X11 specific assumptions and ensure that the Shell works correctly under Wayland restrictions.
+
+#### Week 10 (August 8 – August 24)
+
+In the final weeks, I will focus on testing, debugging, documentation, and stabilization. All migrated components will be tested in a running Sugar session, and regression testing will be performed to ensure that activity launching, Journal, and datastore functionality work correctly.
+
+### 7.5 Final Evaluation Deliverables
+
+By the final evaluation, the following deliverables will be completed:
+
+- Frame, Home View, Journal, Control Panel, and Clipboard components migrated to GTK4.
+- Deprecated GTK3 APIs replaced with GTK4 APIs in migrated components.
+- Sugar Shell runs correctly on GTK4 in both X11 and Wayland sessions.
+- Activity launching, Journal access, clipboard, and datastore functionality working after migration.
+- Migration documentation explaining GTK3 to GTK4 changes.
+- All changes submitted as pull requests to the Sugar repository.
+
+### 7.6 Weekly Time Commitment
+
+I will be able to dedicate approximately 35 to 40 hours per week to this project. I plan to work around 5 to 6 hours per day on weekdays and additional time on weekends for testing, debugging, and documentation.
+
+### 7.7 Progress Reporting Plan
+
+I will maintain a weekly progress blog describing the work completed, challenges faced, and plans for the next week. I will also communicate regularly with my mentors through weekly meetings and submit pull requests frequently so that feedback can be incorporated early. Documentation of migration steps and technical decisions will be maintained throughout the project.
+
+### 7.8 Post GSoC Plans
+
+After GSoC, I plan to continue contributing to Sugar Labs and complete any remaining GTK4 migration work in the Sugar Shell. I would also like to help in migrating more Sugar activities to GTK4 and improving Wayland compatibility. I plan to remain an active contributor in the Sugar Labs community and help new contributors get started with Sugar development.
