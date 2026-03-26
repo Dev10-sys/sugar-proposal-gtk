@@ -156,31 +156,26 @@ This means the Sugar Shell sits between the user and the Linux system and acts a
 This diagram shows the overall architecture of the Sugar system and how the Shell connects the user interface with system services.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart TD
-    %% Top Level User Interaction
     User(("User / Input Devices"))
 
-    %% User Interface & System Display Layer
     subgraph UI_Layer ["User Interface & Display Level"]
         direction LR
         GTK["GTK4 Toolkit"]
         Display["Wayland / X11 Server"]
     end
 
-    %% The Middle Layer (Core)
     Shell{{"Sugar Shell\n(Python + GTK)"}}
 
-    %% System Configuration
     subgraph Config_Layer ["System Configuration Level"]
         direction LR
         GSettings["GSettings"]
         NetworkManager["NetworkManager"]
     end
 
-    %% IPC Communication Layer
     DBus(("DBus Session Bus"))
 
-    %% Background Services
     subgraph Services_Layer ["Sugar Services & Applications"]
         direction LR
         Activities["Activities"]
@@ -189,40 +184,23 @@ flowchart TD
         Datastore["Sugar Datastore"]
     end
 
-    %% Persistence Layer
     Storage[("File System Storage")]
 
-    %% Interactions
     User -->|Interacts with| Shell
-
     Shell -->|Renders UI via| GTK
     GTK -->|Displays on| Display
-
     Shell -->|Reads / Writes Config| GSettings
     Shell -->|Monitors Network| NetworkManager
-
     Shell ===>|Primary Communication| DBus
-
     DBus -->|Spawns & Tracks| Activities
     DBus -->|Logs Events| Journal
     DBus -->|Displays| Notifications
     DBus -->|Read / Write Metadata| Datastore
-
     Datastore -->|Persists Data| Storage
 
-    %% Styling
-    style User fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
-    style Shell fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
-    style DBus fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
-    style GTK fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
-    style Display fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style GSettings fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style NetworkManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Storage fill:#f5f5f5,stroke:#333,stroke-width:1px,color:#1a1a1a
-    style Activities fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Journal fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Datastore fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Notifications fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Shell fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style DBus fill:#3a3a3a,stroke:#aaa,stroke-width:2px,color:#e0e0e0
+    style Storage fill:#3a3a3a,stroke:#aaa,stroke-width:1px,color:#e0e0e0
 ```
 
 _This diagram shows how the Sugar system is structured. The Sugar Shell sits between the user and the Linux system. It uses GTK for the user interface and communicates with system services using DBus. Activities, Journal, Datastore, NetworkManager, and Notifications all communicate with the Sugar Shell through DBus. This shows that the Sugar Shell is the central layer of the system._
@@ -238,6 +216,7 @@ Because of this, I think that migrating the Sugar Shell to GTK4 is a base step. 
 This diagram shows how activities are launched and managed through the Sugar Shell.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'actorTextColor': '#e0e0e0', 'signalColor': '#aaa', 'signalTextColor': '#e0e0e0', 'labelTextColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 sequenceDiagram
     participant User
     participant HomeView
@@ -266,9 +245,9 @@ So this migration involves updating container APIs, layout handling, display han
 This diagram shows how deprecated GTK3 APIs are mapped to GTK4 equivalents.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart LR
-    %% Deprecated Components
-    subgraph Legacy ["GTK3 Legacy APIs (Deprecated)"]
+    subgraph Legacy ["GTK3 Legacy APIs — Deprecated"]
         direction TB
         EventBox["Gtk.EventBox"]
         GdkScreen["Gdk.Screen"]
@@ -277,8 +256,7 @@ flowchart LR
         ModifyBG["Legacy Styling\n(modify_bg, modify_color)"]
     end
 
-    %% Modern Equivalents
-    subgraph Modern ["GTK4 Modern APIs (Replacements)"]
+    subgraph Modern ["GTK4 Modern APIs — Replacements"]
         direction TB
         GestureController["Gtk.GestureClick / Controllers"]
         GdkDisplay["Gdk.Display / Monitors"]
@@ -287,21 +265,14 @@ flowchart LR
         CSSStyling["GTK CSS Providers &\nStyleContext"]
     end
 
-    %% Mapping connections
-    Legacy ===>|Structured Migration| Modern
-
     EventBox --> GestureController
     GdkScreen --> GdkDisplay
     ContainerAPI --> NewLayoutAPI
     OldSignals --> EventControllers
     ModifyBG --> CSSStyling
 
-    %% Styling
-    classDef legacy fill:#f0f0f0,stroke:#555,stroke-width:2px,color:#1a1a1a;
-    classDef modern fill:#fff,stroke:#1a1a1a,stroke-width:2px,color:#1a1a1a;
-
-    class Legacy,EventBox,GdkScreen,ContainerAPI,OldSignals,ModifyBG legacy;
-    class Modern,GestureController,GdkDisplay,NewLayoutAPI,EventControllers,CSSStyling modern;
+    style Legacy fill:#4a2020,stroke:#c44,stroke-width:2px,color:#e0e0e0
+    style Modern fill:#1a3a1a,stroke:#4a4,stroke-width:2px,color:#e0e0e0
 ```
 
 _This diagram shows what changes are required for GTK4. Several GTK3 APIs such as EventBox, old container APIs, screen based display APIs, old event signals, and old styling methods are removed in GTK4 and must be replaced with new GTK4 APIs and event controllers._
@@ -313,23 +284,20 @@ To make the migration structured, I will work component by component inside the 
 This diagram shows the internal structure of the Sugar Shell and its main components.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart TD
-    %% Base Level
     Main["main.py (Entry Point)"]
 
-    %% Core Components
     subgraph Core ["Sugar Shell Internal Modules"]
         direction TB
         ShellModel{{"ShellModel\n(Central State & Logic)"}}
 
-        %% Views Section
         subgraph Views ["Shell Views & Logic"]
             Home["Home View"]
             Journal["Journal"]
             ControlPanel["Control Panel"]
         end
 
-        %% Frame Section
         subgraph FrameSystem ["Frame Overlay Elements"]
             Frame["Frame System"]
             Clipboard["Clipboard Tray"]
@@ -338,14 +306,12 @@ flowchart TD
             ActivitiesTray["Running Activities"]
         end
 
-        %% Management Section
         subgraph Mngmt ["Lifecycle & App Management"]
             Launcher["Activity Launcher"]
             ActivityManager["Activity Lifecycle Manager"]
         end
     end
 
-    %% External Systems via DBus
     subgraph Env ["OS Environment"]
         DBus(("DBus Services"))
         WindowManager["Window Tracking"]
@@ -353,49 +319,25 @@ flowchart TD
         NetworkManager["NetworkManager"]
     end
 
-    %% Core routing
     Main ===>|Initializes| ShellModel
-
-    %% Model tracking to views
     ShellModel -->|Manages| Home
     ShellModel -->|Provides Context to| Journal
     ShellModel -->|Provides Configuration to| ControlPanel
     ShellModel ==>|Controls Layout for| Frame
-
-    %% Routing inside the frame
     Frame -.->|Contains| Clipboard
     Frame -.->|Contains| Devices
     Frame -.->|Contains| Friends
     Frame -.->|Contains| ActivitiesTray
-
-    %% Lifecycle Logic
     ShellModel ==>|Triggers Actions on| Launcher
     ShellModel ==>|Monitors state via| ActivityManager
-
-    %% Interaction with Operating System
     ActivityManager ===>|Orchestrates processes via| DBus
     ActivityManager -.->|Observes events from| WindowManager
     ShellModel --> GSettings
     ShellModel --> NetworkManager
 
-    %% Styling
-    style Main fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
-    style ShellModel fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
-    style DBus fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
-    style ActivityManager fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
-    style Home fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Journal fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style ControlPanel fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Frame fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Clipboard fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Devices fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Friends fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style ActivitiesTray fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style Launcher fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style WindowManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style GSettings fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style NetworkManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
-    style FrameSystem fill:#fafafa,stroke:#999,stroke-width:1px
+    style ShellModel fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style ActivityManager fill:#3a3a3a,stroke:#aaa,stroke-width:2px,color:#e0e0e0
+    style DBus fill:#3a3a3a,stroke:#aaa,stroke-width:2px,color:#e0e0e0
 ```
 
 _The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
@@ -409,6 +351,7 @@ Sugar components communicate using DBus, especially for launching activities and
 This diagram shows how different Sugar components communicate using DBus.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'actorTextColor': '#e0e0e0', 'signalColor': '#aaa', 'signalTextColor': '#e0e0e0', 'labelTextColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 sequenceDiagram
     autonumber
     actor User
@@ -439,8 +382,8 @@ I will divide the work into several technical parts.
 This diagram shows the step-by-step migration plan for GTK4 transition.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart TD
-    %% Workflow steps
     Phase1(["Phase 1: Critical Safety Fixes\n(Crashing bugs)"])
     Phase2(["Phase 2: Display & Monitor API\nMigration"])
     Phase3(["Phase 3: Container and Widget\nMigration"])
@@ -449,7 +392,6 @@ flowchart TD
     Phase6(["Phase 6: Wayland API\nCompatibility Fixes"])
     Phase7{{"Phase 7: Final Testing &\nStabilization"}}
 
-    %% Connections
     Phase1 ===> Phase2
     Phase2 ===> Phase3
     Phase3 ===> Phase4
@@ -457,12 +399,7 @@ flowchart TD
     Phase5 ===> Phase6
     Phase6 ===> Phase7
 
-    %% Styling
-    classDef phaseNode fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
-    classDef finalNode fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
-
-    class Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phaseNode;
-    class Phase7 finalNode;
+    style Phase7 fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
 ```
 
 _The migration will be done in phases. After each phase, the system will be tested to make sure the Sugar Shell remains stable._
@@ -545,8 +482,8 @@ I will discuss each migration step with mentors before starting large changes, a
 This diagram shows how development, testing, and review will be handled during the project.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart TD
-    %% Workflow Definition
     Start(["Start Migration"])
 
     subgraph CoreStabilisation ["Phase 1: Core System Stabilisation"]
@@ -570,7 +507,6 @@ flowchart TD
 
     H(["Stable GTK4 Shell"])
 
-    %% Flow
     Start ===> CoreStabilisation
     A ===> B
     CoreStabilisation ===> APIMigration
@@ -582,14 +518,8 @@ flowchart TD
     F ===> G
     WaylandCompat ===> H
 
-    %% Styling
-    classDef startEnd fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
-    classDef process fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a;
-    classDef processTarget fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a;
-
-    class Start,H startEnd;
-    class A,B,C,D,E process;
-    class F,G processTarget;
+    style Start fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style H fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
 ```
 
 #### 6. Development and Contribution Workflow
@@ -597,11 +527,10 @@ flowchart TD
 This diagram shows how development, testing, and review will be handled during the project.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart LR
-    %% Start
     A(["Pick Component"])
 
-    %% Execution Loop
     subgraph Execution ["Development Lifecycle"]
         direction LR
         B["Create Branch"]
@@ -625,26 +554,16 @@ flowchart LR
         G --> H --> I
     end
 
-    %% Loop Back
     J(["Next Component"])
 
-    %% Connections
     A ===> Execution
     Execution ===> Verification
     Verification ===> Review
     Review ===> J
     J -.->|Iterate| A
 
-    %% Styling
-    classDef coreNode fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
-    classDef testNode fill:#f5f5f5,stroke:#555,stroke-width:1px,color:#1a1a1a;
-    classDef reviewNode fill:#f0f0f0,stroke:#333,stroke-width:2px,color:#1a1a1a;
-    classDef endNode fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a;
-
-    class A,B,C coreNode;
-    class D,E,F testNode;
-    class G,H,I reviewNode;
-    class J endNode;
+    style A fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style J fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
 ```
 
 #### 7. Testing Plan
@@ -670,12 +589,12 @@ Right now many Linux distributions have already moved to Wayland and GTK4, but S
 This diagram explains why X11-based behavior must be updated for Wayland compatibility.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2a2a2a', 'primaryBorderColor': '#888', 'lineColor': '#aaa', 'textColor': '#e0e0e0', 'fontSize': '14px'}}}%%
 flowchart TD
-    %% Current State
     subgraph LegacyEnv ["Old Application Environment"]
         OldSugar["Sugar Window Handling\n(Legacy Patterns)"]
 
-        subgraph X11Features ["X11 Specific Methods (Deprecated in Wayland)"]
+        subgraph X11Features ["X11 Specific Methods — Deprecated in Wayland"]
             direction TB
             X11Calls{"X11 APIs"}
             WindowMove["Absolute Window Positioning / Move"]
@@ -689,12 +608,11 @@ flowchart TD
         X11Calls -.-> ForeignWindows
     end
 
-    %% Target State
     subgraph ModernEnv ["Modern Display Ecosystem"]
         NewLinux{"Modern Linux Distributions\n(GNOME / KMS)"}
         Wayland(("Wayland Compositor"))
 
-        subgraph WaylandRestrictions ["Wayland Protocol Restrictions (Security & Design)"]
+        subgraph WaylandRestrictions ["Wayland Protocol Restrictions — Security & Design"]
             direction TB
             Restriction1["No Absolute Window Moves (Client-side)"]
             Restriction2["No Arbitrary Foreign Window Tracking"]
@@ -707,23 +625,16 @@ flowchart TD
         Wayland --> Restriction3
     end
 
-    %% The Clash
     LegacyEnv ===>|Compatibility Conflict| WaylandRestrictions
     WaylandRestrictions ===>|necessitates| Result
 
     Result{{"GTK4 & Wayland Migration Required\n(Updating APIs & Focus Systems)"}}
 
-    %% Styling
-    classDef legacy fill:#f0f0f0,stroke:#555,stroke-width:2px,color:#1a1a1a;
-    classDef conflict fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a;
-    classDef modern fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
-    classDef target fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
-
-    class LegacyEnv,X11Features legacy;
-    class WaylandRestrictions,Restriction1,Restriction2,Restriction3 conflict;
-    class ModernEnv,NewLinux,Wayland modern;
-    class Result target;
-
+    style LegacyEnv fill:#4a2020,stroke:#c44,stroke-width:2px,color:#e0e0e0
+    style X11Features fill:#3a1a1a,stroke:#a33,stroke-width:1px,color:#e0e0e0
+    style ModernEnv fill:#1a3a1a,stroke:#4a4,stroke-width:2px,color:#e0e0e0
+    style WaylandRestrictions fill:#1a2a1a,stroke:#393,stroke-width:1px,color:#e0e0e0
+    style Result fill:#c8a415,stroke:#e6bc1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
 ```
 
 _This diagram shows why Wayland support requires changes in Sugar. The old Sugar system depends on X11 specific features like window positioning and foreign windows, which are not supported in Wayland. Therefore the Sugar Shell needs to be updated to work correctly on Wayland._
