@@ -156,7 +156,6 @@ This means the Sugar Shell sits between the user and the Linux system and acts a
 This diagram shows the overall architecture of the Sugar system and how the Shell connects the user interface with system services.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart TD
     User(("User / Input Devices"))
 
@@ -198,9 +197,9 @@ flowchart TD
     DBus -->|Read / Write Metadata| Datastore
     Datastore -->|Persists Data| Storage
 
-    style Shell fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
-    style DBus fill:#f5f5f5,stroke:#d4d4d8,stroke-width:2px,color:#000000,font-weight:bold
-    style Storage fill:#f5f5f5,stroke:#d4d4d8,stroke-width:2px,color:#000000,font-weight:bold
+    style Shell fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style DBus fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
+    style Storage fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 _This diagram shows how the Sugar system is structured. The Sugar Shell sits between the user and the Linux system. It uses GTK for the user interface and communicates with system services using DBus. Activities, Journal, Datastore, NetworkManager, and Notifications all communicate with the Sugar Shell through DBus. This shows that the Sugar Shell is the central layer of the system._
@@ -216,7 +215,6 @@ Because of this, I think that migrating the Sugar Shell to GTK4 is a base step. 
 This diagram shows how activities are launched and managed through the Sugar Shell.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'actorBkg': '#1a1a1a', 'actorTextColor': '#ffffff', 'signalColor': '#aaaaaa', 'signalTextColor': '#ffffff', 'fontSize': '15px'}}}%%
 sequenceDiagram
     participant User
     participant HomeView
@@ -245,7 +243,6 @@ So this migration involves updating container APIs, layout handling, display han
 This diagram shows how deprecated GTK3 APIs are mapped to GTK4 equivalents.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart LR
     subgraph Legacy ["GTK3 Legacy APIs — Deprecated"]
         direction TB
@@ -271,8 +268,8 @@ flowchart LR
     OldSignals --> EventControllers
     ModifyBG --> CSSStyling
 
-    style Legacy fill:#3f0f0f,stroke:#ef4444,stroke-width:2px,color:#ffffff
-    style Modern fill:#0f3f1f,stroke:#22c55e,stroke-width:2px,color:#ffffff
+    style Legacy fill:#f8d7da,stroke:#f5c6cb,stroke-width:2px,color:#000000
+    style Modern fill:#d4edda,stroke:#c3e6cb,stroke-width:2px,color:#000000
 ```
 
 _This diagram shows what changes are required for GTK4. Several GTK3 APIs such as EventBox, old container APIs, screen based display APIs, old event signals, and old styling methods are removed in GTK4 and must be replaced with new GTK4 APIs and event controllers._
@@ -284,7 +281,6 @@ To make the migration structured, I will work component by component inside the 
 This diagram shows the internal structure of the Sugar Shell and its main components.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart TD
     Main["main.py (Entry Point)"]
 
@@ -335,9 +331,9 @@ flowchart TD
     ShellModel --> GSettings
     ShellModel --> NetworkManager
 
-    style ShellModel fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
-    style ActivityManager fill:#f5f5f5,stroke:#d4d4d8,stroke-width:2px,color:#000000,font-weight:bold
-    style DBus fill:#f5f5f5,stroke:#d4d4d8,stroke-width:2px,color:#000000,font-weight:bold
+    style ShellModel fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style ActivityManager fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
+    style DBus fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 _The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
@@ -351,7 +347,6 @@ Sugar components communicate using DBus, especially for launching activities and
 This diagram shows how different Sugar components communicate using DBus.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'actorBkg': '#1a1a1a', 'actorTextColor': '#ffffff', 'signalColor': '#aaaaaa', 'signalTextColor': '#ffffff', 'fontSize': '15px'}}}%%
 sequenceDiagram
     autonumber
     actor User
@@ -382,7 +377,6 @@ I will divide the work into several technical parts.
 This diagram shows the step-by-step migration plan for GTK4 transition.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart TD
     Phase1(["Phase 1: Critical Safety Fixes\n(Crashing bugs)"])
     Phase2(["Phase 2: Display & Monitor API\nMigration"])
@@ -399,7 +393,7 @@ flowchart TD
     Phase5 ===> Phase6
     Phase6 ===> Phase7
 
-    style Phase7 fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Phase7 fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 _The migration will be done in phases. After each phase, the system will be tested to make sure the Sugar Shell remains stable._
@@ -482,7 +476,6 @@ I will discuss each migration step with mentors before starting large changes, a
 This diagram shows how development, testing, and review will be handled during the project.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart TD
     Start(["Start Migration"])
 
@@ -518,8 +511,8 @@ flowchart TD
     F ===> G
     WaylandCompat ===> H
 
-    style Start fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
-    style H fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Start fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style H fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 #### 6. Development and Contribution Workflow
@@ -527,7 +520,6 @@ flowchart TD
 This diagram shows how development, testing, and review will be handled during the project.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart LR
     A(["Pick Component"])
 
@@ -562,8 +554,8 @@ flowchart LR
     Review ===> J
     J -.->|Iterate| A
 
-    style A fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
-    style J fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style J fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 #### 7. Testing Plan
@@ -589,7 +581,6 @@ Right now many Linux distributions have already moved to Wayland and GTK4, but S
 This diagram explains why X11-based behavior must be updated for Wayland compatibility.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#0a0a0a', 'primaryColor': '#1a1a1a', 'primaryBorderColor': '#444444', 'lineColor': '#888888', 'textColor': '#ffffff', 'fontSize': '15px'}}}%%
 flowchart TD
     subgraph LegacyEnv ["Old Application Environment"]
         OldSugar["Sugar Window Handling\n(Legacy Patterns)"]
@@ -630,11 +621,11 @@ flowchart TD
 
     Result{{"GTK4 & Wayland Migration Required\n(Updating APIs & Focus Systems)"}}
 
-    style LegacyEnv fill:#3f0f0f,stroke:#ef4444,stroke-width:2px,color:#ffffff
-    style X11Features fill:#5f1f1f,stroke:#f87171,stroke-width:1px,color:#ffffff
-    style ModernEnv fill:#0f3f1f,stroke:#22c55e,stroke-width:2px,color:#ffffff
-    style WaylandRestrictions fill:#1f4f2f,stroke:#4ade80,stroke-width:1px,color:#ffffff
-    style Result fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style LegacyEnv fill:#f8d7da,stroke:#f5c6cb,stroke-width:2px,color:#000000
+    style X11Features fill:#f5c6cb,stroke:#f1b0b7,stroke-width:1px,color:#000000
+    style ModernEnv fill:#d4edda,stroke:#c3e6cb,stroke-width:2px,color:#000000
+    style WaylandRestrictions fill:#c3e6cb,stroke:#b1dfbb,stroke-width:1px,color:#000000
+    style Result fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
 ```
 
 _This diagram shows why Wayland support requires changes in Sugar. The old Sugar system depends on X11 specific features like window positioning and foreign windows, which are not supported in Wayland. Therefore the Sugar Shell needs to be updated to work correctly on Wayland._
