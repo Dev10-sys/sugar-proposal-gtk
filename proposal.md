@@ -2,7 +2,8 @@
 
 **Organization:** Sugar Labs  
 **Project:** GTK4 Transition Part 2 Sugar Shell  
-**Proposal Title:** Completing GTK4 Migration and Wayland Support for the Sugar Shell  
+**Proposal Title:** GTK4 Transition Part 2: Sugar Shell  
+Migrating Core Sugar Shell Components from GTK3 to GTK4 while ensuring compatibility with modern display systems  
 **Submitted by:** Dev
 
 ## About Me
@@ -20,6 +21,31 @@
 | **Time Zone**         | IST (GMT +5:30)                                                                |
 | **Coding Mentors**    | Krish Pandya, Ibiam Chihurumnaya                                               |
 | **Assisting Mentors** | Walter Bender, Juan Pablo Ugarte                                               |
+
+## Table of Contents
+
+1. [Basic Details](#about-me)
+2. [Previous Open Source Work](#previous-open-source-work)
+3. [Abstract](#abstract)
+4. [Problem Statement](#problem-statement)
+5. [Project Details](#project-details)
+   - 5.1 [What are you making](#what-are-you-making)
+   - 5.2 [System Architecture Overview](#system-architecture-overview)
+   - 5.3 [How Activities Depend on the Shell](#how-activities-depend-on-the-sugar-shell)
+   - 5.4 [GTK3 to GTK4 Migration Architecture](#gtk3-to-gtk4-migration-architecture)
+   - 5.5 [Internal Shell Components](#internal-sugar-shell-components)
+   - 5.6 [DBus Communication Architecture](#dbus-communication-architecture)
+   - 5.7 [Migration Phases](#what-work-will-be-done)
+   - 5.8 [Technical Implementation Plan](#technical-implementation-plan)
+   - 5.9 [Testing Plan](#7-testing-plan)
+6. [Impact on Sugar Labs](#how-will-it-impact-sugar-labs)
+7. [Technologies Used](#technologies-i-will-be-using)
+8. [Deliverables](#deliverables-and-expected-results)
+9. [Risks and Challenges](#migration-risks-and-challenges)
+10. [Timeline](#7-project-timeline-and-schedule-of-deliverables)
+11. [Why This Project is Important Right Now](#8-why-this-project-is-important-right-now)
+12. [Why I Am a Good Fit](#9-why-i-am-a-good-fit-for-this-project)
+13. [Post GSoC Plans](#10-post-gsoc-long-term-plans-with-sugar-labs)
 
 ## Previous Open Source Work
 
@@ -67,9 +93,11 @@ The goal of this project is to migrate the Sugar Shell from GTK3 to GTK4 and imp
 
 Since the Sugar Shell is the base layer on which activities depend for launching, datastore access, and system services, stabilizing the Shell on GTK4 will make future activity migration and full Wayland support easier and more reliable.
 
-The work will be implemented and tested using Sugar Live Build, and testing will be performed on both X11 and Wayland environments to ensure stability and compatibility. This project will be implemented in small incremental patches and tested continuously on both X11 and Wayland to ensure system stability during the migration process.
+The work will be implemented and tested using Sugar Live Build, and testing will be performed on both X11 and Wayland environments to ensure stability and compatibility. I will implement changes in small incremental patches and test continuously on both X11 and Wayland to ensure system stability during the migration process.
 
-From my current contributions and testing work on the Sugar repository, I have already started working on GTK related migration tasks and Wayland safety fixes in different parts of the Shell. This project continues that work in a structured way by focusing specifically on the Sugar Shell components that form the base environment for all activities. The goal is to make the Shell stable on GTK4 first, so that activity migration and full Wayland support can continue on top of a stable base system.
+From my current contributions and testing work on the Sugar repository, I have already started working on GTK related migration tasks and Wayland safety fixes in different parts of the Shell. I am continuing that work in a structured way by focusing specifically on the Sugar Shell components that form the core platform for all activities. The goal is to make the Shell stable on GTK4 first, so that activity migration and full Wayland support can continue on top of a stable base system.
+
+This project focuses specifically on the Sugar Shell because the Shell is the base environment where all activities run. Stabilizing the Shell on GTK4 is required before the full ecosystem transition can move forward. The migration will be done step by step while keeping the system usable during the transition.
 
 ## Problem Statement
 
@@ -85,15 +113,16 @@ Another complex component is the Frame system, which depends heavily on screen g
 
 The Sugar Shell is also tightly integrated with DBus services for activity lifecycle management, Journal access, datastore communication, and system services like NetworkManager and GSettings. The GTK4 migration must ensure that these DBus-based workflows continue to work correctly and that activity launching, switching, and stopping are not affected by the migration.
 
-Because the Sugar Shell is the core environment where all activities run, any instability in the Shell affects the entire system. Therefore, the migration must be done in a structured way so that the system remains usable and stable during the transition from GTK3 to GTK4 and from X11 to Wayland. Another important challenge is that GTK4 uses a different rendering model and input handling system, so parts of the Sugar Shell that depend on old event signals and drawing methods must be updated to GTK4 event controllers and modern rendering APIs.
+Because the Sugar Shell manages the full activity lifecycle, any instability in the Shell affects the entire system. Therefore, the migration must be done in a structured way so that the system remains usable and stable during the transition from GTK3 to GTK4 and from X11 to Wayland. Another important challenge is that GTK4 uses a different rendering model and input handling system, so parts of the Sugar Shell that depend on old event signals and drawing methods must be updated to GTK4 event controllers and modern rendering APIs.
+
+Another important aspect is that the Sugar Shell manages the activity lifecycle through DBus and keeps track of running activities, focus, and Journal entries. During the GTK4 migration, this lifecycle management must continue to work correctly so that activities can start, stop, resume, and save data without breaking the user workflow.
 
 ### Why the Sugar Shell Must Be Migrated First
-
 From my understanding of the Sugar architecture, the Shell is responsible for activity lifecycle management, Journal integration, datastore communication, and the main user interface. Activities depend on the Shell for launching, saving work, accessing the Journal, and interacting with system services.
 
 Because of this dependency, if the Shell is not stable on GTK4 and Wayland, activity migration alone will not be enough. Activities may run, but integration issues, display issues, and lifecycle issues can still occur if the Shell is not fully compatible with GTK4 and Wayland.
 
-Therefore, I see the GTK4 migration of the Sugar Shell as a base platform migration. Once the Shell is stable, activity migration and full Wayland support become easier and more reliable.
+Therefore, I see the GTK4 migration of the Sugar Shell as a platform layer migration. Once the Shell is stable, activity migration and full Wayland support become easier and more reliable.
 
 ## Project Details
 
@@ -105,7 +134,7 @@ From what I have studied while working on the Sugar desktop, the Sugar Shell is 
 
 From the issues I worked on, I noticed that the main problem is not only deprecated APIs but the platform change from X11 to Wayland and from GTK3 to GTK4. The Linux desktop ecosystem is moving towards GTK4 and Wayland, and if Sugar stays on GTK3 and X11, it will become harder to run and maintain Sugar on modern systems.
 
-So the goal of this project is to keep the user experience and behavior of Sugar the same, while updating the internal implementation so that the Sugar Shell works on GTK4 and runs correctly on Wayland based systems.
+The goal of this project is not to change how Sugar looks or behaves for users, but to update the underlying GTK layer so that the Sugar Shell can run on GTK4 and work correctly on modern Linux systems.
 
 The main parts I will be working on are the Frame, Journal, Clipboard, Control Panel, and Activity launching system, because these components form the core of the Sugar desktop environment.
 
@@ -123,6 +152,8 @@ Before explaining the migration work, I want to explain how the Sugar system is 
 
 The Sugar Shell is written mostly in Python and uses PyGObject to interact with GTK. GTK then interacts with the display server which can be X11 or Wayland. The Sugar Shell also communicates with system services like DBus, GSettings, NetworkManager, and the Sugar Datastore.
 This means the Sugar Shell sits between the user and the Linux system and acts as the main environment where everything runs.
+
+This diagram shows the overall architecture of the Sugar system and how the Shell connects the user interface with system services.
 
 ```mermaid
 flowchart TD
@@ -180,18 +211,18 @@ flowchart TD
     Datastore -->|Persists Data| Storage
 
     %% Styling
-    style User fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a
-    style Shell fill:#ff9f43,stroke:#e17055,stroke-width:4px,color:#1a1a1a,font-weight:bold
-    style DBus fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#1a1a1a
-    style GTK fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a
-    style Display fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style GSettings fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style NetworkManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Storage fill:#b2bec3,stroke:#636e72,stroke-width:2px,color:#1a1a1a
-    style Activities fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
-    style Journal fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
-    style Datastore fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
-    style Notifications fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#1a1a1a
+    style User fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
+    style Shell fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style DBus fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
+    style GTK fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
+    style Display fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style GSettings fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style NetworkManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Storage fill:#f5f5f5,stroke:#333,stroke-width:1px,color:#1a1a1a
+    style Activities fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Journal fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Datastore fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Notifications fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
 ```
 
 _This diagram shows how the Sugar system is structured. The Sugar Shell sits between the user and the Linux system. It uses GTK for the user interface and communicates with system services using DBus. Activities, Journal, Datastore, NetworkManager, and Notifications all communicate with the Sugar Shell through DBus. This shows that the Sugar Shell is the central layer of the system._
@@ -203,6 +234,8 @@ This is important because the GTK4 migration of the Shell also affects activitie
 From this architecture, I understand that activities do not run independently. They depend on the Sugar Shell for launching, saving data, accessing the Journal, clipboard, and network services.
 
 Because of this, I think that migrating the Sugar Shell to GTK4 is a base step. Once the Shell is stable on GTK4, activities can run on top of a GTK4 environment and activity migration becomes easier and more stable.
+
+This diagram shows how activities are launched and managed through the Sugar Shell.
 
 ```mermaid
 sequenceDiagram
@@ -229,6 +262,8 @@ Now the migration itself is not just replacing widgets. It is a transition from 
 
 In GTK3 many APIs like old container widgets, screen based display handling, and some styling methods are deprecated. GTK4 uses new container APIs, event controllers, CSS based styling, and different display handling methods which are more compatible with Wayland.
 So this migration involves updating container APIs, layout handling, display handling, styling, and input handling so that the Sugar Shell works correctly on GTK4.
+
+This diagram shows how deprecated GTK3 APIs are mapped to GTK4 equivalents.
 
 ```mermaid
 flowchart LR
@@ -262,8 +297,8 @@ flowchart LR
     ModifyBG --> CSSStyling
 
     %% Styling
-    classDef legacy fill:#ffcccc,stroke:#c0392b,stroke-width:2px,color:#1a1a1a;
-    classDef modern fill:#d5f5e3,stroke:#27ae60,stroke-width:2px,color:#1a1a1a;
+    classDef legacy fill:#f0f0f0,stroke:#555,stroke-width:2px,color:#1a1a1a;
+    classDef modern fill:#fff,stroke:#1a1a1a,stroke-width:2px,color:#1a1a1a;
 
     class Legacy,EventBox,GdkScreen,ContainerAPI,OldSignals,ModifyBG legacy;
     class Modern,GestureController,GdkDisplay,NewLayoutAPI,EventControllers,CSSStyling modern;
@@ -274,6 +309,8 @@ _This diagram shows what changes are required for GTK4. Several GTK3 APIs such a
 ### Internal Sugar Shell Components
 
 To make the migration structured, I will work component by component inside the Sugar Shell.
+
+This diagram shows the internal structure of the Sugar Shell and its main components.
 
 ```mermaid
 flowchart TD
@@ -342,23 +379,23 @@ flowchart TD
     ShellModel --> NetworkManager
 
     %% Styling
-    style Main fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a
-    style ShellModel fill:#ff9f43,stroke:#e17055,stroke-width:4px,color:#1a1a1a,font-weight:bold
-    style DBus fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a
-    style ActivityManager fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#1a1a1a
-    style Home fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Journal fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style ControlPanel fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Frame fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Clipboard fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Devices fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Friends fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style ActivitiesTray fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style Launcher fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style WindowManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style GSettings fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style NetworkManager fill:#dfe6e9,stroke:#636e72,stroke-width:1px,color:#1a1a1a
-    style FrameSystem fill:#f0f3f5,stroke:#b2bec3,stroke-width:1px
+    style Main fill:#fff,stroke:#333,stroke-width:1px,color:#1a1a1a
+    style ShellModel fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold
+    style DBus fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
+    style ActivityManager fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a
+    style Home fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Journal fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style ControlPanel fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Frame fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Clipboard fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Devices fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Friends fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style ActivitiesTray fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style Launcher fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style WindowManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style GSettings fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style NetworkManager fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a
+    style FrameSystem fill:#fafafa,stroke:#999,stroke-width:1px
 ```
 
 _The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
@@ -368,6 +405,8 @@ This helps in planning the migration because each of these components uses GTK w
 ### DBus Communication Architecture
 
 Sugar components communicate using DBus, especially for launching activities and accessing the datastore.
+
+This diagram shows how different Sugar components communicate using DBus.
 
 ```mermaid
 sequenceDiagram
@@ -397,6 +436,8 @@ This is important because GTK4 migration should not break DBus communication or 
 
 I will divide the work into several technical parts.
 
+This diagram shows the step-by-step migration plan for GTK4 transition.
+
 ```mermaid
 flowchart TD
     %% Workflow steps
@@ -417,8 +458,8 @@ flowchart TD
     Phase6 ===> Phase7
 
     %% Styling
-    classDef phaseNode fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a,font-weight:bold;
-    classDef finalNode fill:#55efc4,stroke:#00b894,stroke-width:4px,color:#1a1a1a,font-weight:bold;
+    classDef phaseNode fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
+    classDef finalNode fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
 
     class Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phaseNode;
     class Phase7 finalNode;
@@ -501,6 +542,8 @@ I will discuss each migration step with mentors before starting large changes, a
 
 #### 5. Implementation Workflow
 
+This diagram shows how development, testing, and review will be handled during the project.
+
 ```mermaid
 flowchart TD
     %% Workflow Definition
@@ -540,9 +583,9 @@ flowchart TD
     WaylandCompat ===> H
 
     %% Styling
-    classDef startEnd fill:#55efc4,stroke:#00b894,stroke-width:4px,color:#1a1a1a,font-weight:bold;
-    classDef process fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#1a1a1a;
-    classDef processTarget fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#1a1a1a;
+    classDef startEnd fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
+    classDef process fill:#fff,stroke:#555,stroke-width:1px,color:#1a1a1a;
+    classDef processTarget fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a;
 
     class Start,H startEnd;
     class A,B,C,D,E process;
@@ -550,6 +593,8 @@ flowchart TD
 ```
 
 #### 6. Development and Contribution Workflow
+
+This diagram shows how development, testing, and review will be handled during the project.
 
 ```mermaid
 flowchart LR
@@ -591,10 +636,10 @@ flowchart LR
     J -.->|Iterate| A
 
     %% Styling
-    classDef coreNode fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a;
-    classDef testNode fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#1a1a1a;
-    classDef reviewNode fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#1a1a1a;
-    classDef endNode fill:#636e72,stroke:#2d3436,stroke-width:3px,color:#fff;
+    classDef coreNode fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
+    classDef testNode fill:#f5f5f5,stroke:#555,stroke-width:1px,color:#1a1a1a;
+    classDef reviewNode fill:#f0f0f0,stroke:#333,stroke-width:2px,color:#1a1a1a;
+    classDef endNode fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a;
 
     class A,B,C coreNode;
     class D,E,F testNode;
@@ -617,10 +662,12 @@ flowchart LR
 
 ### How Will It Impact Sugar Labs
 
-The Sugar Shell is the main environment where all activities run. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services.
-Because of this, I think that migrating the Sugar Shell to GTK4 is a base platform step. Once the Shell runs on GTK4 and Wayland, activities can be migrated and tested on a stable GTK4 environment.
+Migrating the Sugar Shell to GTK4 enables the transition for the entire Sugar ecosystem. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services.
+Because of this, once the Shell runs on GTK4 and Wayland, activities can be migrated and tested on a stable GTK4 environment.
 
 Right now many Linux distributions have already moved to Wayland and GTK4, but Sugar is still mostly based on GTK3 and X11.
+
+This diagram explains why X11-based behavior must be updated for Wayland compatibility.
 
 ```mermaid
 flowchart TD
@@ -667,10 +714,10 @@ flowchart TD
     Result{{"GTK4 & Wayland Migration Required\n(Updating APIs & Focus Systems)"}}
 
     %% Styling
-    classDef legacy fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#1a1a1a;
-    classDef conflict fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#1a1a1a;
-    classDef modern fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#1a1a1a;
-    classDef target fill:#55efc4,stroke:#00b894,stroke-width:3px,color:#1a1a1a,font-weight:bold;
+    classDef legacy fill:#f0f0f0,stroke:#555,stroke-width:2px,color:#1a1a1a;
+    classDef conflict fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#1a1a1a;
+    classDef modern fill:#fff,stroke:#333,stroke-width:2px,color:#1a1a1a;
+    classDef target fill:#e0e0e0,stroke:#1a1a1a,stroke-width:3px,color:#1a1a1a,font-weight:bold;
 
     class LegacyEnv,X11Features legacy;
     class WaylandRestrictions,Restriction1,Restriction2,Restriction3 conflict;
@@ -775,7 +822,7 @@ In the final week of the community bonding period, I will finalize the repositor
 
 #### Week 1 (May 25 – May 31)
 
-The coding period will begin with setting up a GTK4 development branch and ensuring that the Sugar Shell builds and runs correctly with the GTK4 environment. I will start with critical stability fixes such as removing import-time display access, fixing crashes related to display initialization, and ensuring that the Shell can start reliably.
+The coding period will begin with setting up a GTK4 development branch and ensuring that the Sugar Shell builds and runs correctly with the GTK4 environment. I will start with critical stability fixes such as removing import-time display access, fixing crashes related to display initialization, and ensuring that the Shell can start reliably. Before starting major migration work, I will ensure that the Sugar Shell starts reliably with GTK4 without crashes.
 
 #### Week 2 (June 1 – June 7)
 
@@ -855,7 +902,7 @@ After GSoC, I plan to continue contributing to Sugar Labs and complete any remai
 
 Stabilizing the Sugar Shell on GTK4 and Wayland is a foundational step for the entire Sugar desktop ecosystem.
 
-- **Enabling Platform-wide Transition:** The Sugar Shell acts as the base environment. If the Shell does not run correctly on GTK4 and Wayland, it blocks the transition for activities and downstream distributions.
+- **Enabling Platform-wide Transition:** The Sugar Shell acts as the platform layer for all activities. If the Shell does not run correctly on GTK4 and Wayland, it blocks the transition for activities and downstream distributions.
 - **Parallel Development:** Activity porting using `sugar-toolkit-gtk4` is already underway. A stable GTK4 Shell is required as a reliable testing environment for these modern activities.
 - **Reducing Technical Debt:** As Linux distributions move away from X11 and GTK3, migrating the core Shell components ensures Sugar remains maintainable and compatible with modern hardware and software standards.
 
@@ -869,6 +916,8 @@ My existing contributions and technical understanding of the Sugar Shell make me
 - **Architectural Understanding:** I recognize the Sugar Shell as a full desktop environment with complex lifecycle management, which allows me to handle the migration with the necessary care for system stability.
 
 I am already familiar with the Sugar development workflow, code review process, and debugging environment, so I can start contributing immediately without a long ramp-up period.
+
+I am already working on the Sugar Shell codebase and interacting with the Sugar Labs community. Since I am familiar with the current migration work, development workflow, and debugging process, I will be able to start contributing immediately and continue working on the project even after the GSoC period.
 
 ## 10. Post GSoC Long Term Plans with Sugar Labs
 
