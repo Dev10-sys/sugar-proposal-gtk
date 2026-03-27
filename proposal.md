@@ -9,7 +9,7 @@
 **Organization:** Sugar Labs  
 **Submitted by:** Dev
 
-## About Me
+## 1. About Me
 
 | Field                 | Details                                                                        |
 | :-------------------- | :----------------------------------------------------------------------------- |
@@ -27,30 +27,21 @@
 
 ## Table of Contents
 
-1. [Basic Details](#about-me)
+1. [About Me](#about-me)
 2. [Previous Open Source Work](#previous-open-source-work)
 3. [Abstract](#abstract)
 4. [Problem Statement](#problem-statement)
 5. [Project Details](#project-details)
-   - 5.1 [What are you making](#what-are-you-making)
-   - 5.2 [System Architecture Overview](#system-architecture-overview)
-   - 5.3 [How Activities Depend on the Shell](#how-activities-depend-on-the-sugar-shell)
-   - 5.4 [GTK3 to GTK4 Migration Architecture](#gtk3-to-gtk4-migration-architecture)
-   - 5.5 [Internal Shell Components](#internal-sugar-shell-components)
-   - 5.6 [DBus Communication Architecture](#dbus-communication-architecture)
-   - 5.7 [Migration Phases](#what-work-will-be-done)
-   - 5.8 [Technical Implementation Plan](#technical-implementation-plan)
-   - 5.9 [Testing Plan](#7-testing-plan)
-6. [Impact on Sugar Labs](#how-will-it-impact-sugar-labs)
-7. [Technologies Used](#technologies-i-will-be-using)
-8. [Deliverables](#deliverables-and-expected-results)
-9. [Risks and Challenges](#migration-risks-and-challenges)
-10. [Timeline](#7-project-timeline-and-schedule-of-deliverables)
-11. [Why This Project is Important Right Now](#8-why-this-project-is-important-right-now)
-12. [Why I Am a Good Fit](#9-why-i-am-a-good-fit-for-this-project)
-13. [Post GSoC Plans](#10-post-gsoc-long-term-plans-with-sugar-labs)
+6. [Impact on Sugar Labs](#impact-on-sugar-labs)
+7. [Technologies Used](#technologies-used)
+8. [Deliverables and Expected Results](#deliverables-and-expected-results)
+9. [Migration Risks and Challenges](#migration-risks-and-challenges)
+10. [Project Timeline and Schedule of Deliverables](#project-timeline-and-schedule-of-deliverables)
+11. [Why This Project is Important Right Now](#why-this-project-is-important-right-now)
+12. [Why I Am a Good Fit for This Project](#why-i-am-a-good-fit-for-this-project)
+13. [Post GSoC Long Term Plans with Sugar Labs](#post-gsoc-long-term-plans-with-sugar-labs)
 
-## Previous Open Source Work
+## 2. Previous Open Source Work
 
 I have been contributing to Sugar Labs repositories, mainly focusing on the Sugar desktop environment and core shell components. My work includes fixing runtime issues, improving stability, fixing UI behavior issues, and working on GTK related migration and Wayland compatibility changes. I have worked on different parts of the Sugar desktop such as Journal, Frame, Clipboard, Control Panel, Datastore integration, and GTK related components. Along with Sugar desktop, I have also contributed to other Sugar Labs projects and open source networking test infrastructure.
 
@@ -88,7 +79,7 @@ These SONiC PRs add IPv6 support and extend test coverage for single ASIC VOQ sy
 
 Through these contributions, I have worked on different layers of the Sugar desktop including UI behavior, system integration, runtime stability, and ongoing GTK4 migration work. This experience helped me understand the Sugar shell architecture and the challenges involved in migrating a large GTK3 codebase to GTK4 while maintaining stability.
 
-## Abstract
+## 3. Abstract
 
 The Sugar desktop environment currently depends on GTK3 and X11, both of which are being replaced by GTK4 and Wayland in modern Linux systems. This creates compatibility, maintenance, and stability challenges for the Sugar Shell, which is the core component responsible for the Frame, Journal, activity launching, and system integration.
 
@@ -98,11 +89,11 @@ Since the Sugar Shell is the base layer on which activities depend for launching
 
 The work will be implemented and tested using Sugar Live Build, and testing will be performed on both X11 and Wayland environments to ensure stability and compatibility. I will implement changes in small incremental patches and test continuously on both X11 and Wayland to ensure system stability during the migration process.
 
-From my current contributions and testing work on the Sugar repository, I have already started working on GTK related migration tasks and Wayland safety fixes in different parts of the Shell. I am continuing that work in a structured way by focusing specifically on the Sugar Shell components that form the core platform for all activities. The goal is to make the Shell stable on GTK4 first, so that activity migration and full Wayland support can continue on top of a stable base system.
-
 This project focuses specifically on the Sugar Shell because the Shell is the base environment where all activities run. Stabilizing the Shell on GTK4 is required before the full ecosystem transition can move forward. The migration will be done step by step while keeping the system usable during the transition.
 
-## Problem Statement
+The goal is to make the Sugar Shell stable on GTK4 first so that activity migration and full Wayland support can continue on top of a stable platform. This project focuses on stability, compatibility, and long-term maintainability rather than only visual changes.
+
+## 4. Problem Statement
 
 The Sugar Shell is a full desktop environment built primarily using Python and PyGObject on top of GTK3. While GTK3 has been stable for many years, it is now approaching end-of-life, and the Linux desktop ecosystem is moving towards GTK4 and Wayland. This creates several technical challenges for the Sugar Shell.
 
@@ -128,7 +119,19 @@ Because of this dependency, if the Shell is not stable on GTK4 and Wayland, acti
 
 Therefore, I see the GTK4 migration of the Sugar Shell as a platform layer migration. Once the Shell is stable, activity migration and full Wayland support become easier and more reliable.
 
-## Project Details
+#### Summary of Technical Challenges
+
+| Area | Problem |
+|------|---------|
+| GTK3 APIs | Deprecated and removed in GTK4 |
+| Display Handling | Gdk.Screen removed |
+| Event System | Old event signals removed |
+| Styling | Old styling APIs removed |
+| X11 Dependencies | Not supported in Wayland |
+| Frame System | Depends on screen geometry and positioning |
+| DBus Integration | Must continue working after migration |
+
+## 5. Project Details
 
 ### What are you making
 
@@ -148,6 +151,8 @@ From my understanding of the current GTK4 transition work and discussions in the
 
 My approach is to treat this project as a system migration and stabilization project rather than only a UI migration project, because the Sugar Shell interacts with DBus services, the datastore, activities, and system components. So the migration must be done carefully to maintain system stability while updating the GTK layer.
 
+This project is not only a UI migration but a platform migration of the Sugar Shell so that the entire Sugar desktop environment can continue to work on modern Linux systems.
+
 ### System Architecture Overview
 
 Before explaining the migration work, I want to explain how the Sugar system is structured, because the migration work depends on how different parts of the system interact with each other.
@@ -157,7 +162,7 @@ Before explaining the migration work, I want to explain how the Sugar system is 
 The Sugar Shell is written mostly in Python and uses PyGObject to interact with GTK. GTK then interacts with the display server which can be X11 or Wayland. The Sugar Shell also communicates with system services like DBus, GSettings, NetworkManager, and the Sugar Datastore.
 This means the Sugar Shell sits between the user and the Linux system and acts as the main environment where everything runs.
 
-This diagram shows the overall architecture of the Sugar system and how the Shell connects the user interface with system services.
+*Figure 1: Overall Sugar System Architecture showing how the Sugar Shell connects the user interface, system services, and activities through GTK and DBus.*
 
 ```mermaid
 flowchart TD
@@ -237,7 +242,7 @@ sequenceDiagram
     ShellModel->>Activity: Set Active
 ```
 
-_This diagram shows how activities are launched. The user clicks an activity icon, the Home View sends a launch request to the ShellModel, the ShellModel starts the activity through DBus, and the activity registers its DBus service and opens its window. The ShellModel then tracks the activity and manages its lifecycle._
+*Figure 2: How activities are launched and managed through the Sugar Shell.*
 
 ### GTK3 to GTK4 Migration Architecture
 
@@ -278,7 +283,7 @@ flowchart LR
     style Modern fill:#f0fdf4,stroke:#86efac,color:#052e16
 ```
 
-_This diagram shows what changes are required for GTK4. Several GTK3 APIs such as EventBox, old container APIs, screen based display APIs, old event signals, and old styling methods are removed in GTK4 and must be replaced with new GTK4 APIs and event controllers._
+*Figure 3: GTK3 to GTK4 Mapping showing deprecated APIs and their modern replacements.*
 
 ### Internal Sugar Shell Components
 
@@ -340,7 +345,7 @@ flowchart TD
     style Env fill:#f8fafc,stroke:#e2e8f0
 ```
 
-_The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
+*Figure 4: Internal structure of the Sugar Shell components managed by the ShellModel.*
 
 This helps in planning the migration because each of these components uses GTK widgets and display handling in different ways.
 
@@ -372,6 +377,8 @@ sequenceDiagram
     Act-->>SS: Window Mapped & UI Rendered
 ```
 
+*Figure 5: DBus communication architecture for activity launching and Datastore integration.*
+
 This is important because GTK4 migration should not break DBus communication or activity lifecycle.
 
 ### What Work Will Be Done
@@ -401,7 +408,7 @@ flowchart TD
     style Phase7 fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
 ```
 
-_The migration will be done in phases. After each phase, the system will be tested to make sure the Sugar Shell remains stable._
+*Figure 6: Phased migration strategy for the Sugar Shell GTK4 transition.*
 
 I will migrate and test the system at the same time. After each migration phase, I will run the Sugar Shell and test activity launch, Journal, Frame, and Control Panel on both X11 and Wayland to make sure the system remains stable.
 
@@ -576,7 +583,7 @@ flowchart LR
 | **Wayland**         | Shell startup without crash      |
 | **DBus**            | Activity lifecycle               |
 
-### How Will It Impact Sugar Labs
+## 6. Impact on Sugar Labs
 
 Migrating the Sugar Shell to GTK4 enables the transition for the entire Sugar ecosystem. Activities depend on the Sugar Shell for launching, window management, datastore access, Journal integration, and system services.
 Because of this, once the Shell runs on GTK4 and Wayland, activities can be migrated and tested on a stable GTK4 environment.
@@ -629,12 +636,12 @@ flowchart TD
     style Result fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
 ```
 
-_This diagram shows why Wayland support requires changes in Sugar. The old Sugar system depends on X11 specific features like window positioning and foreign windows, which are not supported in Wayland. Therefore the Sugar Shell needs to be updated to work correctly on Wayland._
+*Figure 7: Impact of Wayland restrictions on legacy X11-based window handling.*
 
 If Sugar is not migrated, it may face compatibility and maintenance problems in the future.
 So I see this project not just as a UI migration, but as a platform transition. This work helps Sugar run on modern Linux systems, reduces technical debt in the Sugar Shell, and makes future development easier because new features can be built on GTK4 instead of maintaining deprecated GTK3 code.
 
-### Technologies I Will Be Using
+## 7. Technologies Used
 
 | Component                | Technology      |
 | :----------------------- | :-------------- |
@@ -651,11 +658,11 @@ So I see this project not just as a UI migration, but as a platform transition. 
 
 Most of the Sugar Shell code is written in Python and uses PyGObject to interact with GTK, so most of the migration work will involve updating GTK APIs and display handling in Python code.
 
-### Deliverables and Expected Results
+## 8. Deliverables and Expected Results
 
 By the end of this project, the following results are expected:
 
-- Sugar Shell components such as Frame, Journal, Clipboard, Control Panel, and Activity Launcher run on GTK4.
+- Sugar Shell components such as **Frame**, **Home View**, **Journal**, **Clipboard**, **Control Panel**, and **Activity Launcher** run on GTK4.
 - Deprecated GTK3 APIs in migrated components are replaced with GTK4 APIs.
 - Sugar Shell starts and runs correctly on Wayland without display related crashes.
 - Activity launch, Journal access, clipboard, and datastore operations work correctly after migration.
@@ -664,10 +671,10 @@ By the end of this project, the following results are expected:
 | Deliverable | Description |
 |:------------|:------------|
 | GTK4 Shell Build | Shell runs on GTK4 |
-| Frame Migration | Frame works on GTK4 |
-| Journal Migration | Journal works |
-| Clipboard Migration | Clipboard works |
-| Control Panel Migration | Settings UI works |
+| **Frame** Migration | Frame works on GTK4 |
+| **Journal** Migration | Journal works |
+| **Clipboard** Migration | Clipboard works |
+| **Control Panel** Migration | Settings UI works |
 | Wayland Compatibility | Shell runs on Wayland |
 | Documentation | Migration guide |
 | Pull Requests | All work submitted |
@@ -676,7 +683,7 @@ The main goal is to make the Sugar Shell stable on GTK4 and compatible with Wayl
 
 All migrated components will be tested in a running Sugar session, and the migration work will be submitted as multiple pull requests to the Sugar repository. The project will also include migration documentation so that other developers can continue migrating remaining components.
 
-## Migration Risks and Challenges
+## 9. Migration Risks and Challenges
 
 Migrating a desktop environment from GTK3 to GTK4 while also improving Wayland compatibility involves several risks and technical challenges.
 
@@ -688,7 +695,9 @@ There is also a stability risk during migration, because the Sugar Shell is the 
 
 To reduce these risks, I will migrate the Shell component by component, test each change in a running Sugar session, and submit small pull requests so that each change can be reviewed and tested before moving to the next component.
 
-## 7. Project Timeline and Schedule of Deliverables
+To reduce these risks, I will avoid large code changes and instead migrate the Shell in small steps. After each change, I will test the Shell in a running Sugar session and submit small pull requests for review. This reduces the risk of large regressions and makes debugging easier.
+
+## 10. Project Timeline and Schedule of Deliverables
 
 ### Project Timeline Overview
 
@@ -703,17 +712,17 @@ To reduce these risks, I will migrate the Shell component by component, test eac
 
 The following is a timeline for the project, broken down into specific phases and milestones:
 
-- **7.0 Pre–Community Bonding Period**
-- **7.1 Community Bonding Period (May 1 – May 24)**
-- **7.2 Coding Period Phase 1 (May 25 – July 10)**
-- **7.3 Midterm Evaluation Deliverables**
-- **7.4 Coding Period Phase 2 (July 11 – August 24)**
-- **7.5 Final Evaluation Deliverables**
-- **7.6 Weekly Time Commitment**
-- **7.7 Progress Reporting Plan**
-- **7.8 Post GSoC Plans**
+- **10.0 Pre–Community Bonding Period**
+- **10.1 Community Bonding Period (May 1 – May 24)**
+- **10.2 Coding Period Phase 1 (May 25 – July 10)**
+- **10.3 Midterm Evaluation Deliverables**
+- **10.4 Coding Period Phase 2 (July 11 – August 24)**
+- **10.5 Final Evaluation Deliverables**
+- **10.6 Weekly Time Commitment**
+- **10.7 Progress Reporting Plan**
+- **10.8 Post GSoC Plans**
 
-### 7.0 Pre–Community Bonding Period
+### 10.0 Pre–Community Bonding Period
 
 Before the official community bonding period, I will continue contributing to the Sugar repository and focus on understanding the Sugar Shell architecture in detail. I will study the existing GTK3 code paths, identify areas that still depend on X11 specific APIs, and review the current progress of GTK4 migration in Sugar and related projects.
 
@@ -723,7 +732,7 @@ I will begin reviewing and documenting the GTK3 to GTK4 API changes that are rel
 
 I also plan to continue submitting small patches and fixes related to GTK4 compatibility and Wayland safety so that I remain actively involved with the Sugar Labs development workflow before the coding period begins. If possible, I will also begin working on small GTK4 related patches during this period so that some migration work is already in progress before the official coding period begins.
 
-### 7.1 Community Bonding Period (May 1 – May 24)
+### 10.1 Community Bonding Period (May 1 – May 24)
 
 #### Week 1 (May 1 – May 7)
 
@@ -741,7 +750,7 @@ During this week, I will begin working on small GTK4 migration tasks such as rep
 
 In the final week of the community bonding period, I will finalize the repository workflow, testing workflow, and documentation structure for the project. I will ensure that the build environment, testing environment, and debugging tools are fully working so that the coding phase can begin smoothly on May 25.
 
-### 7.2 Coding Period Phase 1 (May 25 – July 10)
+### 10.2 Coding Period Phase 1 (May 25 – July 10)
 
 ```mermaid
 graph LR
@@ -761,7 +770,7 @@ graph LR
     style J fill:#f8fafc,stroke:#94a3b8,color:#0f172a
 ```
 
-*Figure: GTK4 Migration Phases for Sugar Shell*
+*Figure 8: GTK4 Migration Phases for Sugar Shell components.*
 
 #### Week 5 (May 25 – May 31)
 
@@ -783,7 +792,7 @@ During this week, I will migrate event handling from old GTK3 event signals to G
 
 In this period, I will focus on migrating and testing the Frame system, since it is one of the most complex components and depends heavily on display geometry, input handling, and window behavior. The Frame will be tested carefully on both X11 and Wayland environments to ensure correct behavior.
 
-### 7.3 Midterm Evaluation Deliverables
+### 10.3 Midterm Evaluation Deliverables
 
 By the midterm evaluation, the following work is expected to be completed:
 
@@ -806,7 +815,7 @@ By the midterm evaluation, the following work is expected to be completed:
 | X11/Wayland Testing | Initial Testing Done |
 | Documentation | Started |
 
-### 7.4 Coding Period Phase 2 (July 11 – August 24)
+### 10.4 Coding Period Phase 2 (July 11 – August 24)
 
 #### Week 10 (July 11 – July 17)
 
@@ -828,7 +837,7 @@ This week will be focused on Wayland compatibility fixes. I will remove remainin
 
 In the final weeks, I will focus on testing, debugging, documentation, and stabilization. All migrated components will be tested in a running Sugar session, and regression testing will be performed to ensure that activity launching, Journal, and datastore functionality work correctly.
 
-### 7.5 Final Evaluation Deliverables
+### 10.5 Final Evaluation Deliverables
 
 By the final evaluation, the following deliverables will be completed:
 
@@ -850,11 +859,11 @@ By the final evaluation, the following deliverables will be completed:
 | Documentation | Completed |
 | Pull Requests | Submitted |
 
-### 7.6 Weekly Time Commitment
+### 10.6 Weekly Time Commitment
 
 I will be able to dedicate approximately 35 to 40 hours per week to this project. I plan to work around 5 to 6 hours per day on weekdays and additional time on weekends for testing, debugging, and documentation.
 
-### 7.7 Progress Reporting Plan
+### 10.7 Progress Reporting Plan
 
 I will maintain a weekly progress blog describing the work completed, challenges faced, and plans for the next week. I will also communicate regularly with my mentors through weekly meetings and submit pull requests frequently so that feedback can be incorporated early. Documentation of migration steps and technical decisions will be maintained throughout the project.
 
@@ -872,13 +881,13 @@ graph TD
     style E fill:#f8fafc,stroke:#94a3b8,color:#0f172a
 ```
 
-*Figure: Weekly Development and Review Cycle*
+*Figure 9: Weekly development, testing, and mentor review cycle.*
 
-### 7.8 Post GSoC Plans
+### 10.8 Post GSoC Plans
 
 After GSoC, I plan to continue contributing to Sugar Labs and complete any remaining GTK4 migration work in the Sugar Shell. I would also like to help in migrating more Sugar activities to GTK4 and improving Wayland compatibility. I plan to remain an active contributor in the Sugar Labs community and help new contributors get started with Sugar development.
 
-## 8. Why This Project is Important Right Now
+## 11. Why This Project is Important Right Now
 
 Stabilizing the Sugar Shell on GTK4 and Wayland is a foundational step for the entire Sugar desktop ecosystem.
 
@@ -886,7 +895,21 @@ Stabilizing the Sugar Shell on GTK4 and Wayland is a foundational step for the e
 - **Parallel Development:** Activity porting using `sugar-toolkit-gtk4` is already underway. A stable GTK4 Shell is required as a reliable testing environment for these modern activities.
 - **Reducing Technical Debt:** As Linux distributions move away from X11 and GTK3, migrating the core Shell components ensures Sugar remains maintainable and compatible with modern hardware and software standards.
 
-## 9. Why I Am a Good Fit for This Project
+```mermaid
+flowchart LR
+    A[GTK3 + X11 Sugar] -->|Deprecated| B[Compatibility Issues]
+    B --> C[Migration Required]
+    C --> D[GTK4 Shell]
+    D --> E[Activity Migration]
+    D --> F[Wayland Support]
+    D --> G[Future Development]
+```
+
+*Figure 10: Why GTK4 Shell Migration is Required for the Sugar Ecosystem.*
+
+Since I am already working on the Sugar Shell codebase and submitting patches, I am familiar with the architecture, debugging process, and development workflow. This allows me to start working on the migration immediately and make steady progress throughout the coding period.
+
+## 12. Why I Am a Good Fit for This Project
 
 My existing contributions and technical understanding of the Sugar Shell make me well-prepared for this migration.
 
@@ -897,9 +920,7 @@ My existing contributions and technical understanding of the Sugar Shell make me
 
 I am already familiar with the Sugar development workflow, code review process, and debugging environment, so I can start contributing immediately without a long ramp-up period.
 
-I am already working on the Sugar Shell codebase and interacting with the Sugar Labs community. Since I am familiar with the current migration work, development workflow, and debugging process, I will be able to start contributing immediately and continue working on the project even after the GSoC period.
-
-## 10. Post GSoC Long Term Plans with Sugar Labs
+## 13. Post GSoC Long Term Plans with Sugar Labs
 
 My commitment to Sugar Labs extends beyond the GSoC coding period.
 
@@ -908,4 +929,5 @@ My commitment to Sugar Labs extends beyond the GSoC coding period.
 - **Mentoring & Onboarding:** I want to help new contributors understand the Sugar codebase, particularly in areas like GTK, activity management, and debugging, making it easier for others to join the project.
 - **Sustained Community Engagement:** I intend to remain an active member of the community, taking on more responsibility in maintaining core components as I gain more experience.
 
-In the long term, I would like to continue working on Sugar Shell stability, GTK4 migration, and Wayland compatibility, and gradually take responsibility for maintaining parts of the Shell as I gain more experience contributing to Sugar Labs.
+In the long term, I would like to continue working on Sugar Shell stability and GTK4 migration and gradually take more responsibility in maintaining parts of the Sugar Shell and helping new contributors get started with Sugar development.
+
