@@ -1,15 +1,18 @@
 # Google Summer of Code 2026 Proposal
 
+## GTK4 Transition Part 2: Sugar Shell
+
+### Migrating Core Sugar Shell Components from GTK3 to GTK4
+
+---
+
 **Organization:** Sugar Labs  
-**Project:** GTK4 Transition Part 2 Sugar Shell  
-**Proposal Title:** GTK4 Transition Part 2: Sugar Shell  
-Migrating Core Sugar Shell Components from GTK3 to GTK4 while ensuring compatibility with modern display systems  
 **Submitted by:** Dev
 
 ## About Me
 
 | Field                 | Details                                                                        |
-| --------------------- | ------------------------------------------------------------------------------ |
+| :-------------------- | :----------------------------------------------------------------------------- |
 | **Name**              | Dev                                                                            |
 | **Degree**            | B.Tech in Computer Science                                                     |
 | **Current Role**      | Undergraduate Student                                                          |
@@ -118,6 +121,7 @@ Because the Sugar Shell manages the full activity lifecycle, any instability in 
 Another important aspect is that the Sugar Shell manages the activity lifecycle through DBus and keeps track of running activities, focus, and Journal entries. During the GTK4 migration, this lifecycle management must continue to work correctly so that activities can start, stop, resume, and save data without breaking the user workflow.
 
 ### Why the Sugar Shell Must Be Migrated First
+
 From my understanding of the Sugar architecture, the Shell is responsible for activity lifecycle management, Journal integration, datastore communication, and the main user interface. Activities depend on the Shell for launching, saving work, accessing the Journal, and interacting with system services.
 
 Because of this dependency, if the Shell is not stable on GTK4 and Wayland, activity migration alone will not be enough. Activities may run, but integration issues, display issues, and lifecycle issues can still occur if the Shell is not fully compatible with GTK4 and Wayland.
@@ -157,49 +161,51 @@ This diagram shows the overall architecture of the Sugar system and how the Shel
 
 ```mermaid
 flowchart TD
-    User(("User / Input Devices"))
+    User(["User / Input"])
 
-    subgraph UI_Layer ["User Interface & Display Level"]
+    subgraph UI_Layer ["Display Layer"]
         direction LR
         GTK["GTK4 Toolkit"]
-        Display["Wayland / X11 Server"]
+        DisplayServer["Wayland / X11"]
     end
 
-    Shell{{"Sugar Shell\n(Python + GTK)"}}
+    Shell["Sugar Shell\n(Python + GTK)"]
 
-    subgraph Config_Layer ["System Configuration Level"]
+    subgraph Sys_Layer ["System Configuration"]
         direction LR
         GSettings["GSettings"]
         NetworkManager["NetworkManager"]
     end
 
-    DBus(("DBus Session Bus"))
+    DBus(["DBus Session Bus"])
 
-    subgraph Services_Layer ["Sugar Services & Applications"]
+    subgraph App_Layer ["Sugar Applications"]
         direction LR
         Activities["Activities"]
-        Journal["Journal Service"]
+        Journal["Journal"]
         Notifications["Notifications"]
-        Datastore["Sugar Datastore"]
+        Datastore["Datastore"]
     end
 
-    Storage[("File System Storage")]
+    Storage[("File System")]
 
-    User -->|Interacts with| Shell
-    Shell -->|Renders UI via| GTK
-    GTK -->|Displays on| Display
-    Shell -->|Reads / Writes Config| GSettings
-    Shell -->|Monitors Network| NetworkManager
-    Shell ===>|Primary Communication| DBus
-    DBus -->|Spawns & Tracks| Activities
-    DBus -->|Logs Events| Journal
-    DBus -->|Displays| Notifications
-    DBus -->|Read / Write Metadata| Datastore
-    Datastore -->|Persists Data| Storage
+    User --> Shell
+    Shell -->|renders via| GTK
+    GTK --> DisplayServer
+    Shell --> GSettings
+    Shell --> NetworkManager
+    Shell -->|IPC| DBus
+    DBus --> Activities
+    DBus --> Journal
+    DBus --> Notifications
+    DBus --> Datastore
+    Datastore --> Storage
 
-    style Shell fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
-    style DBus fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
-    style Storage fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
+    style Shell fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
+    style DBus fill:#1e293b,stroke:#334155,color:#f8fafc
+    style UI_Layer fill:#f8fafc,stroke:#e2e8f0
+    style Sys_Layer fill:#f8fafc,stroke:#e2e8f0
+    style App_Layer fill:#f8fafc,stroke:#e2e8f0
 ```
 
 _This diagram shows how the Sugar system is structured. The Sugar Shell sits between the user and the Linux system. It uses GTK for the user interface and communicates with system services using DBus. Activities, Journal, Datastore, NetworkManager, and Notifications all communicate with the Sugar Shell through DBus. This shows that the Sugar Shell is the central layer of the system._
@@ -244,22 +250,22 @@ This diagram shows how deprecated GTK3 APIs are mapped to GTK4 equivalents.
 
 ```mermaid
 flowchart LR
-    subgraph Legacy ["GTK3 Legacy APIs — Deprecated"]
+    subgraph Legacy ["GTK3 — Deprecated"]
         direction TB
         EventBox["Gtk.EventBox"]
         GdkScreen["Gdk.Screen"]
-        ContainerAPI["Old Container APIs\n(VBox, HBox, pack_start)"]
-        OldSignals["Old Event Signals\n(button-press-event)"]
-        ModifyBG["Legacy Styling\n(modify_bg, modify_color)"]
+        ContainerAPI["VBox / HBox\npack_start / pack_end"]
+        OldSignals["button-press-event\nkey-press-event"]
+        ModifyBG["modify_bg / modify_fg"]
     end
 
-    subgraph Modern ["GTK4 Modern APIs — Replacements"]
+    subgraph Modern ["GTK4 — Replacement"]
         direction TB
-        GestureController["Gtk.GestureClick / Controllers"]
-        GdkDisplay["Gdk.Display / Monitors"]
-        NewLayoutAPI["New Layout APIs\n(Gtk.Box, append/prepend)"]
-        EventControllers["Gtk.EventController"]
-        CSSStyling["GTK CSS Providers &\nStyleContext"]
+        GestureController["GestureClick\nEventControllerKey"]
+        GdkDisplay["Gdk.Display\nMonitor API"]
+        NewLayoutAPI["Gtk.Box\nappend / prepend"]
+        EventControllers["EventController"]
+        CSSStyling["GTK CSS Providers"]
     end
 
     EventBox --> GestureController
@@ -268,8 +274,8 @@ flowchart LR
     OldSignals --> EventControllers
     ModifyBG --> CSSStyling
 
-    style Legacy fill:#f8d7da,stroke:#f5c6cb,stroke-width:2px,color:#000000
-    style Modern fill:#d4edda,stroke:#c3e6cb,stroke-width:2px,color:#000000
+    style Legacy fill:#fef2f2,stroke:#fca5a5,color:#450a0a
+    style Modern fill:#f0fdf4,stroke:#86efac,color:#052e16
 ```
 
 _This diagram shows what changes are required for GTK4. Several GTK3 APIs such as EventBox, old container APIs, screen based display APIs, old event signals, and old styling methods are removed in GTK4 and must be replaced with new GTK4 APIs and event controllers._
@@ -282,58 +288,56 @@ This diagram shows the internal structure of the Sugar Shell and its main compon
 
 ```mermaid
 flowchart TD
-    Main["main.py (Entry Point)"]
+    Main["main.py"]
 
-    subgraph Core ["Sugar Shell Internal Modules"]
+    subgraph Core ["Sugar Shell"]
         direction TB
-        ShellModel{{"ShellModel\n(Central State & Logic)"}}
+        ShellModel["ShellModel\n(Central State)"]
 
-        subgraph Views ["Shell Views & Logic"]
+        subgraph Views ["Views"]
             Home["Home View"]
             Journal["Journal"]
             ControlPanel["Control Panel"]
         end
 
-        subgraph FrameSystem ["Frame Overlay Elements"]
+        subgraph FrameSystem ["Frame"]
             Frame["Frame System"]
-            Clipboard["Clipboard Tray"]
-            Devices["Device Tray"]
-            Friends["Network Tray"]
-            ActivitiesTray["Running Activities"]
+            Clipboard["Clipboard"]
+            Devices["Devices"]
+            ActivitiesTray["Activities Tray"]
         end
 
-        subgraph Mngmt ["Lifecycle & App Management"]
-            Launcher["Activity Launcher"]
-            ActivityManager["Activity Lifecycle Manager"]
+        subgraph Mngmt ["Lifecycle"]
+            Launcher["Launcher"]
+            ActivityManager["Activity Manager"]
         end
     end
 
-    subgraph Env ["OS Environment"]
-        DBus(("DBus Services"))
-        WindowManager["Window Tracking"]
+    subgraph Env ["System"]
+        DBus(["DBus"])
         GSettings["GSettings"]
         NetworkManager["NetworkManager"]
     end
 
-    Main ===>|Initializes| ShellModel
-    ShellModel -->|Manages| Home
-    ShellModel -->|Provides Context to| Journal
-    ShellModel -->|Provides Configuration to| ControlPanel
-    ShellModel ==>|Controls Layout for| Frame
-    Frame -.->|Contains| Clipboard
-    Frame -.->|Contains| Devices
-    Frame -.->|Contains| Friends
-    Frame -.->|Contains| ActivitiesTray
-    ShellModel ==>|Triggers Actions on| Launcher
-    ShellModel ==>|Monitors state via| ActivityManager
-    ActivityManager ===>|Orchestrates processes via| DBus
-    ActivityManager -.->|Observes events from| WindowManager
+    Main --> ShellModel
+    ShellModel --> Home
+    ShellModel --> Journal
+    ShellModel --> ControlPanel
+    ShellModel --> Frame
+    Frame --> Clipboard
+    Frame --> Devices
+    Frame --> ActivitiesTray
+    ShellModel --> Launcher
+    ShellModel --> ActivityManager
+    ActivityManager --> DBus
     ShellModel --> GSettings
     ShellModel --> NetworkManager
 
-    style ShellModel fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
-    style ActivityManager fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
-    style DBus fill:#f8f9fa,stroke:#ced4da,stroke-width:2px,color:#000000,font-weight:bold
+    style ShellModel fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
+    style ActivityManager fill:#1e293b,stroke:#334155,color:#f8fafc
+    style DBus fill:#1e293b,stroke:#334155,color:#f8fafc
+    style Core fill:#f8fafc,stroke:#e2e8f0
+    style Env fill:#f8fafc,stroke:#e2e8f0
 ```
 
 _The ShellModel is the central component that manages the Home View, Frame, Journal, Control Panel, and Activity Launcher, and also manages the activity lifecycle and DBus communication._
@@ -378,22 +382,23 @@ This diagram shows the step-by-step migration plan for GTK4 transition.
 
 ```mermaid
 flowchart TD
-    Phase1(["Phase 1: Critical Safety Fixes\n(Crashing bugs)"])
-    Phase2(["Phase 2: Display & Monitor API\nMigration"])
-    Phase3(["Phase 3: Container and Widget\nMigration"])
-    Phase4(["Phase 4: Event Handling &\nInput Migration"])
-    Phase5(["Phase 5: CSS & Styling\nMigration"])
-    Phase6(["Phase 6: Wayland API\nCompatibility Fixes"])
-    Phase7{{"Phase 7: Final Testing &\nStabilization"}}
+    Phase1["Phase 1: Safety Fixes\n(crash bugs)"]
+    Phase2["Phase 2: Display API\nMigration"]
+    Phase3["Phase 3: Container\nMigration"]
+    Phase4["Phase 4: Event Handling\nMigration"]
+    Phase5["Phase 5: CSS & Styling\nMigration"]
+    Phase6["Phase 6: Wayland\nCompatibility"]
+    Phase7["Phase 7: Testing &\nStabilization"]
 
-    Phase1 ===> Phase2
-    Phase2 ===> Phase3
-    Phase3 ===> Phase4
-    Phase4 ===> Phase5
-    Phase5 ===> Phase6
-    Phase6 ===> Phase7
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
+    Phase4 --> Phase5
+    Phase5 --> Phase6
+    Phase6 --> Phase7
 
-    style Phase7 fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style Phase1 fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style Phase7 fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
 ```
 
 _The migration will be done in phases. After each phase, the system will be tested to make sure the Sugar Shell remains stable._
@@ -477,42 +482,42 @@ This diagram shows how development, testing, and review will be handled during t
 
 ```mermaid
 flowchart TD
-    Start(["Start Migration"])
+    Start["Start Migration"]
 
-    subgraph CoreStabilisation ["Phase 1: Core System Stabilisation"]
+    subgraph P1 ["Phase 1: Stabilisation"]
         direction TB
-        A["Fix Import-time Crashes"]
+        A["Fix import-time crashes"]
         B["Replace Display APIs"]
+        A --> B
     end
 
-    subgraph APIMigration ["Phase 2: UI & Interaction Migration"]
+    subgraph P2 ["Phase 2: API Migration"]
         direction TB
         C["Replace Container APIs"]
         D["Replace Event Handling"]
         E["Replace Styling"]
+        C --> D --> E
     end
 
-    subgraph WaylandCompat ["Phase 3: Wayland & Testing"]
+    subgraph P3 ["Phase 3: Wayland & Testing"]
         direction TB
         F["Fix Wayland Issues"]
-        G["Testing and Debugging"]
+        G["Regression Testing"]
+        F --> G
     end
 
-    H(["Stable GTK4 Shell"])
+    Done["Stable GTK4 Shell"]
 
-    Start ===> CoreStabilisation
-    A ===> B
-    CoreStabilisation ===> APIMigration
-    B -.-> C
-    C ===> D
-    D ===> E
-    APIMigration ===> WaylandCompat
-    E -.-> F
-    F ===> G
-    WaylandCompat ===> H
+    Start --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> Done
 
-    style Start fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
-    style H fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style Start fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style Done fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
+    style P1 fill:#f8fafc,stroke:#e2e8f0
+    style P2 fill:#f8fafc,stroke:#e2e8f0
+    style P3 fill:#f8fafc,stroke:#e2e8f0
 ```
 
 #### 6. Development and Contribution Workflow
@@ -521,41 +526,41 @@ This diagram shows how development, testing, and review will be handled during t
 
 ```mermaid
 flowchart LR
-    A(["Pick Component"])
+    Start(["Pick Component"])
 
-    subgraph Execution ["Development Lifecycle"]
+    subgraph Dev ["Development"]
         direction LR
         B["Create Branch"]
-        C["Migrate Small Part"]
+        C["Migrate"]
         B --> C
     end
 
-    subgraph Verification ["Testing Lifecycle"]
+    subgraph Test ["Testing"]
         direction LR
-        D["Run Sugar Live Build"]
-        E["Test on X11"]
-        F["Test on Wayland"]
+        D["Sugar Live Build"]
+        E["X11 Test"]
+        F["Wayland Test"]
         D --> E --> F
     end
 
-    subgraph Review ["Integration Lifecycle"]
+    subgraph Review ["Review"]
         direction LR
-        G["Submit Pull Request"]
+        G["Pull Request"]
         H["Code Review"]
         I["Merge"]
         G --> H --> I
     end
 
-    J(["Next Component"])
+    Next(["Next Component"])
 
-    A ===> Execution
-    Execution ===> Verification
-    Verification ===> Review
-    Review ===> J
-    J -.->|Iterate| A
+    Start --> Dev --> Test --> Review --> Next
+    Next -.->|loop| Start
 
-    style A fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
-    style J fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style Start fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style Next fill:#0f172a,stroke:#334155,color:#f8fafc
+    style Dev fill:#f8fafc,stroke:#e2e8f0
+    style Test fill:#f8fafc,stroke:#e2e8f0
+    style Review fill:#f8fafc,stroke:#e2e8f0
 ```
 
 #### 7. Testing Plan
@@ -582,50 +587,46 @@ This diagram explains why X11-based behavior must be updated for Wayland compati
 
 ```mermaid
 flowchart TD
-    subgraph LegacyEnv ["Old Application Environment"]
-        OldSugar["Sugar Window Handling\n(Legacy Patterns)"]
+    subgraph LegacyEnv ["Sugar with X11 (Current)"]
+        OldSugar["Sugar Window Handling"]
 
-        subgraph X11Features ["X11 Specific Methods — Deprecated in Wayland"]
+        subgraph X11APIs ["X11-specific APIs"]
             direction TB
-            X11Calls{"X11 APIs"}
-            WindowMove["Absolute Window Positioning / Move"]
-            ScreenSize["Global Screen Geometry Lookups"]
-            ForeignWindows["Foreign Window Interception"]
+            WindowMove["window.move()"]
+            ScreenSize["Gdk.Screen.width()"]
+            ForeignWindows["Foreign Window Embedding"]
         end
 
-        OldSugar --> X11Calls
-        X11Calls -.-> WindowMove
-        X11Calls -.-> ScreenSize
-        X11Calls -.-> ForeignWindows
+        OldSugar --> WindowMove
+        OldSugar --> ScreenSize
+        OldSugar --> ForeignWindows
     end
 
-    subgraph ModernEnv ["Modern Display Ecosystem"]
-        NewLinux{"Modern Linux Distributions\n(GNOME / KMS)"}
-        Wayland(("Wayland Compositor"))
+    subgraph ModernEnv ["Modern Linux (Wayland)"]
+        Wayland["Wayland Compositor"]
 
-        subgraph WaylandRestrictions ["Wayland Protocol Restrictions — Security & Design"]
+        subgraph Restrictions ["Wayland Restrictions"]
             direction TB
-            Restriction1["No Absolute Window Moves (Client-side)"]
-            Restriction2["No Arbitrary Foreign Window Tracking"]
-            Restriction3["Monitor-Based Local Geometry Only"]
+            R1["No absolute window.move()"]
+            R2["No foreign window tracking"]
+            R3["Monitor-local geometry only"]
         end
 
-        NewLinux --> Wayland
-        Wayland --> Restriction1
-        Wayland --> Restriction2
-        Wayland --> Restriction3
+        Wayland --> R1
+        Wayland --> R2
+        Wayland --> R3
     end
 
-    LegacyEnv ===>|Compatibility Conflict| WaylandRestrictions
-    WaylandRestrictions ===>|necessitates| Result
+    LegacyEnv -->|breaks on| Restrictions
+    Restrictions -->|requires| Result
 
-    Result{{"GTK4 & Wayland Migration Required\n(Updating APIs & Focus Systems)"}}
+    Result["GTK4 + Wayland Migration Required"]
 
-    style LegacyEnv fill:#f8d7da,stroke:#f5c6cb,stroke-width:2px,color:#000000
-    style X11Features fill:#f5c6cb,stroke:#f1b0b7,stroke-width:1px,color:#000000
-    style ModernEnv fill:#d4edda,stroke:#c3e6cb,stroke-width:2px,color:#000000
-    style WaylandRestrictions fill:#c3e6cb,stroke:#b1dfbb,stroke-width:1px,color:#000000
-    style Result fill:#ffe599,stroke:#d6b656,stroke-width:2px,color:#000000,font-weight:bold
+    style LegacyEnv fill:#fef2f2,stroke:#fca5a5,color:#450a0a
+    style X11APIs fill:#fff7f7,stroke:#fca5a5,color:#450a0a
+    style ModernEnv fill:#f0fdf4,stroke:#86efac,color:#052e16
+    style Restrictions fill:#f7fff7,stroke:#86efac,color:#052e16
+    style Result fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
 ```
 
 _This diagram shows why Wayland support requires changes in Sugar. The old Sugar system depends on X11 specific features like window positioning and foreign windows, which are not supported in Wayland. Therefore the Sugar Shell needs to be updated to work correctly on Wayland._
@@ -660,6 +661,17 @@ By the end of this project, the following results are expected:
 - Activity launch, Journal access, clipboard, and datastore operations work correctly after migration.
 - The migration changes are documented so that other developers can continue migrating remaining components.
 
+| Deliverable | Description |
+|:------------|:------------|
+| GTK4 Shell Build | Shell runs on GTK4 |
+| Frame Migration | Frame works on GTK4 |
+| Journal Migration | Journal works |
+| Clipboard Migration | Clipboard works |
+| Control Panel Migration | Settings UI works |
+| Wayland Compatibility | Shell runs on Wayland |
+| Documentation | Migration guide |
+| Pull Requests | All work submitted |
+
 The main goal is to make the Sugar Shell stable on GTK4 and compatible with Wayland so that future development can continue on modern Linux systems.
 
 All migrated components will be tested in a running Sugar session, and the migration work will be submitted as multiple pull requests to the Sugar repository. The project will also include migration documentation so that other developers can continue migrating remaining components.
@@ -678,9 +690,18 @@ To reduce these risks, I will migrate the Shell component by component, test eac
 
 ## 7. Project Timeline and Schedule of Deliverables
 
-The following is a
+### Project Timeline Overview
 
-timeline for the project, broken down into specific phases and milestones:
+| Phase | Dates | Focus Area |
+|:------|:------|:-----------|
+| Pre-Community Period | Before May 1 | Environment setup, architecture study |
+| Community Bonding | May 1 – May 24 | Planning, design, initial fixes |
+| Coding Phase 1 | May 25 – July 10 | Core GTK4 migration (Display, Containers, Events, Frame) |
+| Midterm Evaluation | July 10 | Core Shell components migrated |
+| Coding Phase 2 | July 11 – Aug 24 | Remaining components + Wayland fixes |
+| Final Evaluation | Aug 24 | Testing, stabilization, documentation |
+
+The following is a timeline for the project, broken down into specific phases and milestones:
 
 - **7.0 Pre–Community Bonding Period**
 - **7.1 Community Bonding Period (May 1 – May 24)**
@@ -722,23 +743,43 @@ In the final week of the community bonding period, I will finalize the repositor
 
 ### 7.2 Coding Period Phase 1 (May 25 – July 10)
 
-#### Week 1 (May 25 – May 31)
+```mermaid
+graph LR
+    A["GTK3 Shell"] --> B["Display"]
+    B --> C["Containers"]
+    C --> D["Events"]
+    D --> E["Frame"]
+    E --> F["Journal"]
+    F --> G["Control Panel"]
+    G --> H["Clipboard"]
+    H --> I["Wayland"]
+    I --> J["Testing"]
+    J --> K["GTK4 Shell"]
+
+    style A fill:#fef2f2,stroke:#fca5a5,color:#450a0a
+    style K fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
+    style J fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+```
+
+*Figure: GTK4 Migration Phases for Sugar Shell*
+
+#### Week 5 (May 25 – May 31)
 
 The coding period will begin with setting up a GTK4 development branch and ensuring that the Sugar Shell builds and runs correctly with the GTK4 environment. I will start with critical stability fixes such as removing import-time display access, fixing crashes related to display initialization, and ensuring that the Shell can start reliably. Before starting major migration work, I will ensure that the Sugar Shell starts reliably with GTK4 without crashes.
 
-#### Week 2 (June 1 – June 7)
+#### Week 6 (June 1 – June 7)
 
 During this week, I will work on migrating display and monitor related APIs. This includes replacing deprecated Gdk.Screen APIs with Gdk.Display and monitor-based geometry APIs. This step is important for Wayland compatibility and for components such as the Frame and Home View which depend on screen geometry.
 
-#### Week 3 (June 8 – June 14)
+#### Week 7 (June 8 – June 14)
 
 In this week, I will begin migrating GTK3 container APIs to GTK4 container and layout APIs. This includes replacing pack_start, pack_end, Gtk.EventBox, Gtk.Alignment, and other deprecated container widgets. The focus will be on the Home View and basic Shell UI components.
 
-#### Week 4 (June 15 – June 21)
+#### Week 8 (June 15 – June 21)
 
 During this week, I will migrate event handling from old GTK3 event signals to GTK4 Event Controllers such as GestureClick and EventControllerKey. This is especially important for the Frame system, keyboard shortcuts, and activity switching behavior.
 
-#### Week 5 (June 22 – July 10)
+#### Week 9 (June 22 – July 10)
 
 In this period, I will focus on migrating and testing the Frame system, since it is one of the most complex components and depends heavily on display geometry, input handling, and window behavior. The Frame will be tested carefully on both X11 and Wayland environments to ensure correct behavior.
 
@@ -755,25 +796,35 @@ By the midterm evaluation, the following work is expected to be completed:
 - Basic testing completed on both X11 and Wayland environments.
 - Initial migration documentation and testing notes.
 
+| Component | Status |
+|:----------|:-------|
+| GTK4 Build | Working |
+| Display Migration | Completed |
+| Container Migration | Completed |
+| Event Handling Migration | Completed |
+| Frame Migration | Partial |
+| X11/Wayland Testing | Initial Testing Done |
+| Documentation | Started |
+
 ### 7.4 Coding Period Phase 2 (July 11 – August 24)
 
-#### Week 6 (July 11 – July 17)
+#### Week 10 (July 11 – July 17)
 
 During this week, I will continue the migration of remaining Shell components such as the Journal and Activity Launcher. These components involve dialogs, object chooser, and activity lifecycle integration.
 
-#### Week 7 (July 18 – July 24)
+#### Week 11 (July 18 – July 24)
 
 In this week, I will work on migrating Control Panel components and settings related UI, including deprecated GTK widgets and layout APIs used in the Control Panel.
 
-#### Week 8 (July 25 – July 31)
+#### Week 12 (July 25 – July 31)
 
 During this week, I will migrate Clipboard, Notifications, and tray components. These components depend on display handling and event handling, so they will be tested carefully after migration.
 
-#### Week 9 (August 1 – August 7)
+#### Week 13 (August 1 – August 7)
 
 This week will be focused on Wayland compatibility fixes. I will remove remaining X11 specific assumptions and ensure that the Shell works correctly under Wayland restrictions.
 
-#### Week 10 (August 8 – August 24)
+#### Week 14 (August 8 – August 24)
 
 In the final weeks, I will focus on testing, debugging, documentation, and stabilization. All migrated components will be tested in a running Sugar session, and regression testing will be performed to ensure that activity launching, Journal, and datastore functionality work correctly.
 
@@ -788,6 +839,17 @@ By the final evaluation, the following deliverables will be completed:
 - Migration documentation explaining GTK3 to GTK4 changes.
 - All changes submitted as pull requests to the Sugar repository.
 
+| Component | Result |
+|:----------|:-------|
+| Frame | Migrated |
+| Home View | Migrated |
+| Journal | Migrated |
+| Control Panel | Migrated |
+| Clipboard | Migrated |
+| Wayland Compatibility | Working |
+| Documentation | Completed |
+| Pull Requests | Submitted |
+
 ### 7.6 Weekly Time Commitment
 
 I will be able to dedicate approximately 35 to 40 hours per week to this project. I plan to work around 5 to 6 hours per day on weekdays and additional time on weekends for testing, debugging, and documentation.
@@ -795,6 +857,22 @@ I will be able to dedicate approximately 35 to 40 hours per week to this project
 ### 7.7 Progress Reporting Plan
 
 I will maintain a weekly progress blog describing the work completed, challenges faced, and plans for the next week. I will also communicate regularly with my mentors through weekly meetings and submit pull requests frequently so that feedback can be incorporated early. Documentation of migration steps and technical decisions will be maintained throughout the project.
+
+```mermaid
+graph TD
+    A["Plan"] --> B["Develop"]
+    B --> C["Test"]
+    C --> D["Pull Request"]
+    D --> E["Mentor Review"]
+    E --> F["Fix & Iterate"]
+    F --> A
+
+    style A fill:#0f172a,stroke:#334155,color:#f8fafc,font-weight:bold
+    style D fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style E fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+```
+
+*Figure: Weekly Development and Review Cycle*
 
 ### 7.8 Post GSoC Plans
 
