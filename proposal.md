@@ -776,11 +776,11 @@ gantt
     
     section Community
     Pre-Community Period       :active, p1, 2026-03-01, 2026-05-04
-    Community Bonding          :after p1, p2, 21d
+    Community Bonding          :p2, after p1, 21d
     
     section Coding Phase 1
     Core Migration (Display/UI):p3, 2026-05-25, 2026-06-15
-    Frame System Porting      :p4, after p3, 25d
+    Frame System Porting       :p4, after p3, 25d
     Midterm Evaluation         :milestone, m1, 2026-07-10, 0d
     
     section Coding Phase 2
