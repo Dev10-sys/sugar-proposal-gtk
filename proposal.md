@@ -552,7 +552,7 @@ This diagram shows how development, testing, and review will be handled during t
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'lineColor': '#64748b'}, 'flowchart': {'curve': 'linear'}}}%%
-flowchart TD
+flowchart LR
     Start["Start Migration"]
 
     subgraph P1 ["Phase 1: Stabilisation"]
